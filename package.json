@@ -1,7 +1,7 @@
 {
   "name": "@dutu/kucoin-api-node",
   "version": "0.1.0",
-  "description": "Node.js wrapper for local and remote Bisq API endpoints",
+  "description": "KuCoin API client for REST and WebSocket API",
   "type": "module",
   "author": "dutu <dutu.protonmail.com>",
   "exports": "./src/index.mjs",
@@ -18,7 +18,8 @@
     "API",
     "wrapper",
     "client",
-    "websocket",
+    "Rest",
+    "WebSocket",
     "bitcoin",
     "crypto",
     "trading"

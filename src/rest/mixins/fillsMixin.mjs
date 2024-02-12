@@ -5,23 +5,25 @@
  * @returns {Class} A new class extending `Base` with additional fills methods.
  */
 export const fillsMixin = (Base) => class extends Base {
-  getFilledList(params) {
+  getFilledList(params, onRateLimitInfoCallback) {
     return this.makeRequest({
       endpoint: '/api/v1/fills',
       method: 'GET',
       requireAuth: true,
       baseUrl: 'spot',
       params,
+      onRateLimitInfoCallback,
     })
   }
 
-  getRecentFilledList(params) {
+  getRecentFilledList(params, onRateLimitInfoCallback) {
     return this.makeRequest({
       endpoint: '/api/v1/limit/fills',
       method: 'GET',
       requireAuth: true,
       baseUrl: 'spot',
       params,
+      onRateLimitInfoCallback,
     })
   }
 

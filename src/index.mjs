@@ -10,13 +10,29 @@ import { FuturesTradingWrapper } from './rest/FuturesTradingWrapper.mjs'
  */
 class Kucoin {
   /**
-   * Initializes the Kucoin API client with the provided credentials.
-   * @param {Object} credentials - The API credentials needed for authenticated requests. Should contain API key, secret, and passphrase.
+   * Initializes the Kucoin API client with the provided credentials. If any credential is provided,
+   * all credentials (apiKey, apiSecret, apiPassphrase, apiKeyVersion) must be provided.
+   * This setup is necessary for authenticated requests, while public API calls do not require credentials.
+   *
+   * @param {Object} [credentials={}] - The API credentials needed for authenticated requests.
+   * @param {string} [credentials.apiKey] - The API key.
+   * @param {string} [credentials.apiSecret] - The API secret.
+   * @param {string} [credentials.apiPassphrase] - The passphrase specified when the API key was created.
+   * @param {string} [credentials.apiKeyVersion] - The version of the API key.
+   * @throws {Error} If some but not all API credentials are provided.
    */
-  constructor(credentials) {
-    this.account = new AccountWrapper(credentials, client)
-    this.spotTrading = new SpotTradingWrapper(credentials, client)
-    this.marginTrading = new MarginTradingWrapper(credentials, client)
-    this.futuresTrading = new FuturesTradingWrapper(credentials, client)
+  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}) {
+    // Check for partial credentials
+    const credentialsList = [apiKey, apiSecret, apiPassphrase, apiKeyVersion]
+    const credentialsProvided = credentialsList.filter(cred => cred !== undefined)
+    if (credentialsProvided.length > 0 && credentialsProvided.length < credentialsList.length) {
+      throw new Error('All API credentials (apiKey, apiSecret, apiPassphrase, apiKeyVersion) must be provided or none at all.')
+    }
+
+    const credentials = credentialsProvided.length > 0 ? { apiKey, apiSecret, apiPassphrase, apiKeyVersion } : undefined
+    this.account = new AccountWrapper(credentials)
+    this.spotTrading = new SpotTradingWrapper(credentials)
+    this.marginTrading = new MarginTradingWrapper(credentials)
+    this.futuresTrading = new FuturesTradingWrapper(credentials)
   }
 }
