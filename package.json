@@ -1,0 +1,31 @@
+{
+  "name": "@dutu/kucoin-api-node",
+  "version": "0.1.0",
+  "description": "Node.js wrapper for local and remote Bisq API endpoints",
+  "type": "module",
+  "author": "dutu <dutu.protonmail.com>",
+  "exports": "./src/index.mjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dutu/kucoin-api-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dutu/kucoin-api-node/issues"
+  },
+  "homepage": "https://github.com/dutu/kucoin-api-node#readme",
+  "keywords": [
+    "KuCoin",
+    "API",
+    "wrapper",
+    "client",
+    "websocket",
+    "bitcoin",
+    "crypto",
+    "trading"
+  ],
+  "license": "MIT",
+  "packageManager": "yarn@4.1.0",
+  "dependencies": {
+    "axios": "^1.6.7"
+  }
+}
