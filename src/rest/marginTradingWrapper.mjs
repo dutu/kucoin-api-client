@@ -2,7 +2,7 @@ import { BaseWrapper } from './baseWrapper.mjs'
 import { marketDataMixin } from './mixins/marketDataMixin.mjs'
 import { fillsMixin } from './mixins/fillsMixin.mjs'
 import { stopOrderMixin } from './mixins/stopOrderMixin.mjs'
-import { composeMixins } from '../utils/utils.mjs'
+import { composeMixins } from '../utils/composeMixins.mjs'
 
 /**
  * Class representing the Margin Trading functionality.
