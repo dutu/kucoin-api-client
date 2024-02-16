@@ -6,7 +6,7 @@ import { convertNumbersToStrings } from '../utils/convertNumbersToStrings.mjs'
 export class BaseWrapper {
   #credentials
   #onApiCallRateInfo
-  #logger
+  #log
   #client
   #baseURLs = {
     spot: `https://api.kucoin.com`,
@@ -16,7 +16,7 @@ export class BaseWrapper {
   constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { onApiCallRateInfo, logger }) {
     this.#credentials = { apiKey, apiSecret, apiPassphrase, apiKeyVersion }
     this.#onApiCallRateInfo = onApiCallRateInfo
-    this.#logger = logger
+    this.#log = logger
     this.#client = axios.create()
   }
 
@@ -88,7 +88,7 @@ export class BaseWrapper {
     }
 
     // Error if authentication is required but no API key is provided
-    if (requiresAuth && !this.#apiKey) {
+    if (requiresAuth && !this.#credentials.apiKey) {
       throw new Error('Authentication is required, but no API key was provided.')
     }
 
@@ -176,7 +176,7 @@ export class BaseWrapper {
    * @returns {string} The base64-encoded signature.
    */
   #signMessage(message) {
-    return crypto.createHmac('sha256', this.#apiSecret)
+    return crypto.createHmac('sha256', this.#credentials.apiSecret)
       .update(message)
       .digest('base64')
   }
@@ -193,14 +193,14 @@ export class BaseWrapper {
     const timestamp = Date.now().toString()
     const strToSign = `${timestamp}${method}${endpoint}${body}`
     const signature = this.#signMessage(strToSign)
-    const passphrase = this.#signMessage(this.#apiPassphrase)
+    const passphrase = this.#signMessage(this.#credentials.apiPassphrase)
 
     return {
       'KC-API-SIGN': signature,
       'KC-API-TIMESTAMP': timestamp,
-      'KC-API-KEY': this.#apiKey,
+      'KC-API-KEY': this.#credentials.apiKey,
       'KC-API-PASSPHRASE': passphrase,
-      'KC-API-KEY-VERSION': this.#apiKeyVersion
+      'KC-API-KEY-VERSION': this.#credentials.apiKeyVersion
     }
   }
 }
