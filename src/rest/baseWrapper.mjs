@@ -8,17 +8,19 @@ export class BaseWrapper {
   #apiSecret
   #apiPassphrase
   #apiKeyVersion
+  #eventEmitter
   #client
   #baseURLs = {
     spot: `https://api.kucoin.com`,
     futures: 'https://api-futures.kucoin.com',
   }
 
-  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}) {
+  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { eventEmitter, logger }) {
     this.#apiKey = apiKey
     this.#apiSecret = apiSecret
     this.#apiPassphrase = apiPassphrase
     this.#apiKeyVersion = apiKeyVersion
+    this.#eventEmitter = eventEmitter
     this.#client = axios.create()
   }
 
@@ -133,7 +135,7 @@ export class BaseWrapper {
       }
 
       // Emit rate limit info directly without checking for listeners
-      this.emit('rateLimitInfo', rateLimitInfo);
+      this.#eventEmitter.emit('rateLimitInfo', rateLimitInfo);
 
       return response.data;
     } catch (error) {

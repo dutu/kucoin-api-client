@@ -26,7 +26,8 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["axios", "npm:1.6.7"]\
+          ["axios", "npm:1.6.7"],\
+          ["eventemitter3", "npm:5.0.1"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -36,7 +37,8 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@dutu/kucoin-api-node", "workspace:."],\
-          ["axios", "npm:1.6.7"]\
+          ["axios", "npm:1.6.7"],\
+          ["eventemitter3", "npm:5.0.1"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -77,6 +79,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/delayed-stream-npm-1.0.0-c5a4c4cc02-10c0.zip/node_modules/delayed-stream/",\
         "packageDependencies": [\
           ["delayed-stream", "npm:1.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["eventemitter3", [\
+      ["npm:5.0.1", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/eventemitter3-npm-5.0.1-5e423b7df3-10c0.zip/node_modules/eventemitter3/",\
+        "packageDependencies": [\
+          ["eventemitter3", "npm:5.0.1"]\
         ],\
         "linkType": "HARD"\
       }]\

@@ -1,8 +1,8 @@
 import { BaseWrapper } from './baseWrapper.mjs'
 
 export class AccountWrapper extends BaseWrapper {
-  constructor(credentials) {
-    super(credentials)
+  constructor(credentials, serviceConfig) {
+    super(credentials, serviceConfig)
   }
 
   getAccountSummaryInfo(params) {

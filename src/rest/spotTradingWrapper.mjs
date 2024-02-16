@@ -9,8 +9,8 @@ import { composeMixins } from '../utils/composeMixins.mjs'
  * The class uses mixins to include trading methods common for spot and margin.
  */
 export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixin, stopOrderMixin)(BaseWrapper) {
-  constructor(credentials) {
-    super(credentials)
+  constructor(credentials, serviceConfig) {
+    super(credentials, serviceConfig)
   }
 
   placeOrder(params) {
