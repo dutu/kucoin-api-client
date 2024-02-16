@@ -4,23 +4,19 @@ import { toQueryString } from '../utils/toQueryString.mjs'
 import { convertNumbersToStrings } from '../utils/convertNumbersToStrings.mjs'
 
 export class BaseWrapper {
-  #apiKey
-  #apiSecret
-  #apiPassphrase
-  #apiKeyVersion
-  #eventEmitter
+  #credentials
+  #onApiCallRateInfo
+  #logger
   #client
   #baseURLs = {
     spot: `https://api.kucoin.com`,
     futures: 'https://api-futures.kucoin.com',
   }
 
-  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { eventEmitter, logger }) {
-    this.#apiKey = apiKey
-    this.#apiSecret = apiSecret
-    this.#apiPassphrase = apiPassphrase
-    this.#apiKeyVersion = apiKeyVersion
-    this.#eventEmitter = eventEmitter
+  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { onApiCallRateInfo, logger }) {
+    this.#credentials = { apiKey, apiSecret, apiPassphrase, apiKeyVersion }
+    this.#onApiCallRateInfo = onApiCallRateInfo
+    this.#logger = logger
     this.#client = axios.create()
   }
 
@@ -38,7 +34,7 @@ export class BaseWrapper {
    * @param {Function} [config.onRateLimitInfoCallback=null] - An optional callback that, if provided,
    *        will be called with rate limit information from the API response. The information
    *        includes total resource pool quota, remaining quota, and reset countdown (milliseconds).
-   *        Signature: (rateLimitInfo: {limit: number, remaining: number, reset: number}) => void
+   *        Signature: (apiCallRateInfo: {limit: number, remaining: number, reset: number}) => void
    * @throws {Error} If an unsupported HTTP method is used or if authentication is required but the API key is missing.
    *
    * Example of using the callback:
@@ -53,7 +49,7 @@ export class BaseWrapper {
    *   }
    * });
    * ```
-   * Additionally, this method emits rate limit information through the 'rateLimitInfo' event
+   * Additionally, this method emits rate limit information through the 'apiCallRateInfo' event
    * if listeners are attached, providing an alternative mechanism to access this information.
    *
    * Example of using the callback:
@@ -71,7 +67,7 @@ export class BaseWrapper {
    *
    * Example of attaching an event listener for rate limit information:
    * ```
-   * apiWrapper.on('rateLimitInfo', (info) => {
+   * apiWrapper.on('apiCallRateInfo', (info) => {
    *   console.log('Received rate limit info via event emitter:', info);
    * });
    *
@@ -123,7 +119,7 @@ export class BaseWrapper {
       const response = await this.#client(options);
 
       // Extract rate limit information
-      const rateLimitInfo = {
+      const apiCallRateInfo = {
         limit: response.headers['gw-ratelimit-limit'],
         remaining: response.headers['gw-ratelimit-remaining'],
         reset: response.headers['gw-ratelimit-reset']
@@ -131,11 +127,11 @@ export class BaseWrapper {
 
       // Call the callback with rate limit info if provided
       if (typeof onRateLimitInfoCallback === 'function') {
-        onRateLimitInfoCallback(rateLimitInfo);
+        onRateLimitInfoCallback(apiCallRateInfo);
       }
 
-      // Emit rate limit info directly without checking for listeners
-      this.#eventEmitter.emit('rateLimitInfo', rateLimitInfo);
+      // Call onApiCallRateInfo with apiCallRateInfo
+      this.#onApiCallRateInfo(apiCallRateInfo)
 
       return response.data;
     } catch (error) {
