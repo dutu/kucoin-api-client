@@ -31,56 +31,19 @@ export class BaseWrapper {
    * @param {string} config.baseUrl - The base URL key for determining the full URL.
    * @param {boolean} [config.requiresAuth=false] - Indicates if the request requires authentication.
    * @param {Object} [config.params={}] - The parameters for the request.
-   * @param {Function} [config.onRateLimitInfoCallback=null] - An optional callback that, if provided,
-   *        will be called with rate limit information from the API response. The information
-   *        includes total resource pool quota, remaining quota, and reset countdown (milliseconds).
-   *        Signature: (apiCallRateInfo: {limit: number, remaining: number, reset: number}) => void
    * @throws {Error} If an unsupported HTTP method is used or if authentication is required but the API key is missing.
    *
-   * Example of using the callback:
+   * Example:
    * ```
    * apiWrapper.makeRequest({
    *   endpoint: '/example',
    *   method: 'GET',
    *   baseUrl: 'https://api.example.com',
    *   requiresAuth: true,
-   *   onRateLimitInfoCallback: (info) => {
-   *     console.log('Rate limit info:', info);
-   *   }
-   * });
-   * ```
-   * Additionally, this method emits rate limit information through the 'apiCallRateInfo' event
-   * if listeners are attached, providing an alternative mechanism to access this information.
-   *
-   * Example of using the callback:
-   * ```
-   * apiWrapper.makeRequest({
-   *   endpoint: '/example',
-   *   method: 'GET',
-   *   baseUrl: 'https://api.example.com',
-   *   requiresAuth: true,
-   *   onRateLimitInfoCallback: (info) => {
-   *     console.log('Rate limit info:', info);
-   *   }
-   * });
-   * ```
-   *
-   * Example of attaching an event listener for rate limit information:
-   * ```
-   * apiWrapper.on('apiCallRateInfo', (info) => {
-   *   console.log('Received rate limit info via event emitter:', info);
-   * });
-   *
-   * // Then make a request without providing the onRateLimitInfoCallback callback
-   * apiWrapper.makeRequest({
-   *   endpoint: '/example',
-   *   method: 'GET',
-   *   baseUrl: 'https://api.example.com',
-   *   requiresAuth: true
-   * });
+   * })
    * ```
    */
-  async makeRequest({ endpoint, method, baseUrl, requiresAuth = false, params = {}, onRateLimitInfoCallback = null }) {
+  async makeRequest({ endpoint, method, baseUrl, requiresAuth = false, params = {} }) {
     const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
     if (!supportedMethods.includes(method)) {
@@ -92,51 +55,60 @@ export class BaseWrapper {
       throw new Error('Authentication is required, but no API key was provided.')
     }
 
-    const { finalEndpoint, queryParams } = this.#prepareEndpoint(endpoint, params)
-    let url = `${this.#baseURLs[baseUrl]}${finalEndpoint}`
+    const { baseEndpoint, queryParams } = this.#prepareEndpoint(endpoint, params)
 
-    const options = {
+    const axiosConfig = {
       method,
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      url: `${this.#baseURLs[baseUrl]}${baseEndpoint}`,
+      timeout: 5000,
     }
 
-    if (['GET', 'DELETE'].includes(method) && Object.keys(queryParams).length > 0) {
-      options.url += `?${toQueryString(queryParams)}`
-    }
-
-    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      options.data = JSON.stringify(convertNumbersToStrings(params))
+    // Include params as 'params' for GET and DELETE, 'data' for others
+    let data
+    if (['GET', 'DELETE'].includes(method)) {
+      axiosConfig.params = queryParams
+      data = toQueryString(queryParams)
+    } else {
+      axiosConfig.data = queryParams
+      data = JSON.stringify(queryParams)
     }
 
     if (requiresAuth) {
-      Object.assign(options.headers, this.#getAuthHeaders(endpoint, method, options.data))
+      const timestamp = Date.now().toString()
+      const strToSign = `${timestamp}${method}${baseEndpoint}${data}`
+      const sign = crypto.createHmac('sha256', this.#credentials.apiSecret).update(strToSign).digest('base64')
+
+      axiosConfig.headers['KC-API-KEY'] = this.#credentials.apiKey
+      axiosConfig.headers['KC-API-SIGN'] = sign
+      axiosConfig.headers['KC-API-TIMESTAMP'] = timestamp
+      axiosConfig.headers['Content-Type'] = 'application/json'
+
+      if (this.#credentials.apiKeyVersion.toString() === '2') {
+        axiosConfig.headers['KC-API-PASSPHRASE'] = crypto.createHmac('sha256', this.#credentials.apiSecret).update(this.#credentials.apiPassphrase).digest('base64')
+        axiosConfig.headers['KC-API-KEY-VERSION'] = 2
+      }
     }
 
+    let response
     try {
-      const response = await this.#client(options);
-
-      // Extract rate limit information
-      const apiCallRateInfo = {
-        limit: response.headers['gw-ratelimit-limit'],
-        remaining: response.headers['gw-ratelimit-remaining'],
-        reset: response.headers['gw-ratelimit-reset']
-      };
-
-      // Call the callback with rate limit info if provided
-      if (typeof onRateLimitInfoCallback === 'function') {
-        onRateLimitInfoCallback(apiCallRateInfo);
+      response = await axios(axiosConfig)
+      if (!(response.status === 200 && response.data?.code === '200000')) {
+        throw new Error(`${response.data?.code || response.status}: ${response.statusText}`)
       }
-
-      // Call onApiCallRateInfo with apiCallRateInfo
-      this.#onApiCallRateInfo(apiCallRateInfo)
-
-      return response.data;
     } catch (error) {
-      throw error;
-    }  }
+      throw new Error(error.response ? `${error.response.status}: ${error.response.statusText}` : error.message)
+    }
+
+    // Extract rate limit information
+    let apiCallRateInfo = {
+      limit: response.headers['gw-ratelimit-limit'],
+      remaining: response.headers['gw-ratelimit-remaining'],
+      reset: response.headers['gw-ratelimit-reset']
+    }
+
+    this.#onApiCallRateInfo(apiCallRateInfo)
+    return response.data
+  }
 
   /**
    * Prepares the API endpoint by replacing path placeholders with actual values from `params`.
@@ -144,29 +116,29 @@ export class BaseWrapper {
    *
    * @param {string} endpoint - The API endpoint template with path placeholders.
    * @param {Object} params - The parameters object containing both path variable values and query parameters.
-   * @returns {{finalEndpoint: string, queryParams: Object}} An object containing the final endpoint with replaced path placeholders and query parameters.
+   * @returns {{baseEndpoint: string, queryParams: Object}} An object containing the base endpoint with replaced path placeholders and query parameters.
    */
   #prepareEndpoint(endpoint, params) {
-    let finalEndpoint = endpoint
+    let baseEndpoint = endpoint
     const queryParams = {}
 
     Object.entries(params).forEach(([key, value]) => {
       // Check and replace path placeholders
       const pathPlaceholder = `{${key}}`
-      if (finalEndpoint.includes(pathPlaceholder)) {
-        finalEndpoint = finalEndpoint.replace(pathPlaceholder, encodeURIComponent(value))
+      if (baseEndpoint.includes(pathPlaceholder)) {
+        baseEndpoint = baseEndpoint.replace(pathPlaceholder, encodeURIComponent(value))
       } else {
         queryParams[key] = value // Collect as query parameter
       }
     })
 
     // After replacing, check if any path placeholders are left unreplaced
-    const remainingPathPlaceholders = finalEndpoint.match(/\{([^}]+)\}/g)
+    const remainingPathPlaceholders = baseEndpoint.match(/\{([^}]+)\}/g)
     if (remainingPathPlaceholders) {
       throw new Error(`Missing values for parameters: ${remainingPathPlaceholders.join(", ")}`)
     }
 
-    return { finalEndpoint, queryParams }
+    return { baseEndpoint, queryParams }
   }
 
   /**
@@ -193,14 +165,15 @@ export class BaseWrapper {
     const timestamp = Date.now().toString()
     const strToSign = `${timestamp}${method}${endpoint}${body}`
     const signature = this.#signMessage(strToSign)
-    const passphrase = this.#signMessage(this.#credentials.apiPassphrase)
+    const apiKeyVersion = this.#credentials.apiKeyVersion.toString()
+    const passphrase = apiKeyVersion === '2' ? this.#signMessage(this.#credentials.apiPassphrase) : this.#credentials.apiPassphrase
 
     return {
       'KC-API-SIGN': signature,
       'KC-API-TIMESTAMP': timestamp,
       'KC-API-KEY': this.#credentials.apiKey,
       'KC-API-PASSPHRASE': passphrase,
-      'KC-API-KEY-VERSION': this.#credentials.apiKeyVersion
+      'KC-API-KEY-VERSION': apiKeyVersion
     }
   }
 }
