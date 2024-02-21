@@ -27,7 +27,11 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["axios", "npm:1.6.7"],\
-          ["eventemitter3", "npm:5.0.1"]\
+          ["eventemitter3", "npm:5.0.1"],\
+          ["forever-websocket", "npm:0.4.1"],\
+          ["isomorphic-ws", "virtual:26127662e6b44cae6ec723a6f41876bf62d815db022cf35dd7b3a1d4e1a7fb9ac438dc233050c5d5c307cdf6af300068c3a6d7004197e04652df20cb3afe4476#npm:5.0.0"],\
+          ["uniqid", "npm:5.4.0"],\
+          ["ws", "virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -38,7 +42,11 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@dutu/kucoin-api-node", "workspace:."],\
           ["axios", "npm:1.6.7"],\
-          ["eventemitter3", "npm:5.0.1"]\
+          ["eventemitter3", "npm:5.0.1"],\
+          ["forever-websocket", "npm:0.4.1"],\
+          ["isomorphic-ws", "virtual:26127662e6b44cae6ec723a6f41876bf62d815db022cf35dd7b3a1d4e1a7fb9ac438dc233050c5d5c307cdf6af300068c3a6d7004197e04652df20cb3afe4476#npm:5.0.0"],\
+          ["uniqid", "npm:5.4.0"],\
+          ["ws", "virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -114,6 +122,17 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["forever-websocket", [\
+      ["npm:0.4.1", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/forever-websocket-npm-0.4.1-eb21d03324-10c0.zip/node_modules/forever-websocket/",\
+        "packageDependencies": [\
+          ["forever-websocket", "npm:0.4.1"],\
+          ["eventemitter3", "npm:5.0.1"],\
+          ["ws", "virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["form-data", [\
       ["npm:4.0.0", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/form-data-npm-4.0.0-916facec2d-10c0.zip/node_modules/form-data/",\
@@ -122,6 +141,28 @@ const RAW_RUNTIME_STATE =
           ["asynckit", "npm:0.4.0"],\
           ["combined-stream", "npm:1.0.8"],\
           ["mime-types", "npm:2.1.35"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["isomorphic-ws", [\
+      ["npm:5.0.0", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/isomorphic-ws-npm-5.0.0-9c72251c2d-10c0.zip/node_modules/isomorphic-ws/",\
+        "packageDependencies": [\
+          ["isomorphic-ws", "npm:5.0.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:26127662e6b44cae6ec723a6f41876bf62d815db022cf35dd7b3a1d4e1a7fb9ac438dc233050c5d5c307cdf6af300068c3a6d7004197e04652df20cb3afe4476#npm:5.0.0", {\
+        "packageLocation": "./.yarn/__virtual__/isomorphic-ws-virtual-54af0c8125/3/AppData/Local/Yarn/Berry/cache/isomorphic-ws-npm-5.0.0-9c72251c2d-10c0.zip/node_modules/isomorphic-ws/",\
+        "packageDependencies": [\
+          ["isomorphic-ws", "virtual:26127662e6b44cae6ec723a6f41876bf62d815db022cf35dd7b3a1d4e1a7fb9ac438dc233050c5d5c307cdf6af300068c3a6d7004197e04652df20cb3afe4476#npm:5.0.0"],\
+          ["@types/ws", null],\
+          ["ws", "virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0"]\
+        ],\
+        "packagePeers": [\
+          "@types/ws",\
+          "ws"\
         ],\
         "linkType": "HARD"\
       }]\
@@ -150,6 +191,41 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/proxy-from-env-npm-1.1.0-c13d07f26b-10c0.zip/node_modules/proxy-from-env/",\
         "packageDependencies": [\
           ["proxy-from-env", "npm:1.1.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["uniqid", [\
+      ["npm:5.4.0", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/uniqid-npm-5.4.0-f982bda028-10c0.zip/node_modules/uniqid/",\
+        "packageDependencies": [\
+          ["uniqid", "npm:5.4.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["ws", [\
+      ["npm:8.16.0", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/ws-npm-8.16.0-46943f6199-10c0.zip/node_modules/ws/",\
+        "packageDependencies": [\
+          ["ws", "npm:8.16.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0", {\
+        "packageLocation": "./.yarn/__virtual__/ws-virtual-b67c02ce91/3/AppData/Local/Yarn/Berry/cache/ws-npm-8.16.0-46943f6199-10c0.zip/node_modules/ws/",\
+        "packageDependencies": [\
+          ["ws", "virtual:eb21d033241071be87b07e5360d825800999582043f8c6bd9a61b0f1d8a6f72311d0db511e6a0f6b0a09089af35b7028cbfa65e5b83cf92d87565644c469fa42#npm:8.16.0"],\
+          ["@types/bufferutil", null],\
+          ["@types/utf-8-validate", null],\
+          ["bufferutil", null],\
+          ["utf-8-validate", null]\
+        ],\
+        "packagePeers": [\
+          "@types/bufferutil",\
+          "@types/utf-8-validate",\
+          "bufferutil",\
+          "utf-8-validate"\
         ],\
         "linkType": "HARD"\
       }]\

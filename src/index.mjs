@@ -2,7 +2,9 @@ import { SpotTradingWrapper } from './rest/spotTradingWrapper.mjs'
 import { AccountWrapper } from './rest/accountWrapper.mjs'
 import { MarginTradingWrapper } from './rest/MarginTradingWrapper.mjs'
 import { FuturesTradingWrapper } from './rest/FuturesTradingWrapper.mjs'
+import { createWebSocketClient } from './webSocket/webSocketClient.mjs'
 import { noop } from './utils/noop.mjs'
+import { WebSocketConnectWrapper } from './rest/webSocketConnectWrapper.mjs'
 
 /**
  * Kucoin API client, providing access to various trading operations.
@@ -99,6 +101,8 @@ export class Kucoin {
     this.spotTrading = new SpotTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.marginTrading = new MarginTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.futuresTrading = new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
+    this.createSpotWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'spot')
+    this.createFuturesWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'futures')
   }
 }
 
