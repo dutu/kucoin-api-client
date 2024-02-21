@@ -68,11 +68,7 @@ export function createPubSubManager() {
     }
 
     function deleteSubscription(subscription) {
-      const { id, topic } = subscription
-      if (subscriptions.get(id)?.topic !== topic) {
-        throw new Error(`Subscription id ${id} with topic ${topic} doesn't exist.`)
-      }
-
+      const { id } = subscription
       subscriptions.delete(id)
     }
 
@@ -80,24 +76,58 @@ export function createPubSubManager() {
       return Array.from(subscriptions.values())
     }
 
-    return { addSubscription, deleteSubscription, getSubscriptions }
+    /**
+     * Retrieves subscription IDs for a given topic.
+     */
+    function getSubscriptionsByTopic(topic) {
+      const subscriptionsByTopic = []
+      subscriptions.forEach((subscription) => {
+        if (subscription.topic === topic) {
+          subscriptionsByTopic.push(subscription)
+        }
+      })
+      return subscriptionsByTopic
+    }
+
+    /**
+     * Retrieves the subscription for a given id.
+     */
+    function getSubscriptionById(id) {
+      const subscriptions = getSubscriptions()
+      return subscriptions.find((subscription) => subscription.id === id)
+    }
+
+    return { addSubscription, deleteSubscription, getSubscriptions, getSubscriptionsByTopic, getSubscriptionById }
   })()
 
   /**
+   * Handles aggregated subscriptions by splitting the topic string and applying the given action.
+   */
+  function handleAggregatedSubscriptions({ id, aggregatedTopic }, callback, action) {
+    const [baseTopic, identifiersStr] = aggregatedTopic.split(':')
+    const identifiers = identifiersStr.split(',')
+    identifiers.forEach(identifier => {
+      const topic = `${baseTopic}:${identifier}`
+      action({ id, topic }, callback)
+    })
+  }
+
+  /**
    * Subscribes to a given topic with a callback. Supports both simple and aggregated subscriptions.
-   * @param {Object} subscription - An object containing subscription details, including id and topic.
-   * @param {Function} callback - Callback function to execute when a message for the topic is received.
    */
   function subscribe(subscription, callback) {
     const { id, topic } = subscription
+
+    if (!(topic && id)) {
+      throw new Error(`Subscription id and topic are required`)
+    }
+
     subscriptionManager.addSubscription(subscription)
 
+    // Check if the subscription is for aggregated topics (indicated by a comma in the topic string)
     if (topic.includes(',')) {
-      const baseTopic = topic.split(':')[0]
-      const identifiers = topic.split(':')[1].split(',')
-      identifiers.forEach(identifier => {
-        messageDistributor.registerSubscription({ id, topic: `${baseTopic}:${identifier}` }, callback)
-      })
+      // For aggregated subscriptions, use handleAggregatedSubscriptions to split the topic into individual topics and register each separately
+      handleAggregatedSubscriptions({ id, aggregatedTopic: topic }, callback, messageDistributor.registerSubscription)
     } else {
       messageDistributor.registerSubscription({ id, topic }, callback)
     }
@@ -105,30 +135,34 @@ export function createPubSubManager() {
 
   /**
    * Unsubscribes from a given topic. Supports unsubscribing from both simple and aggregated subscriptions.
-   * @param {Object} subscription - An object containing subscription details to be removed, including id and topic.
    */
   function unsubscribe(subscription) {
     const { id, topic } = subscription
+
+    if (id && topic) {
+      const subscription = subscriptionManager.getSubscriptionById(id)
+      if (subscription && subscription.topic !== topic) {
+        throw new Error(`Subscription id ${id} with topic ${topic} doesn't exist`)
+      }
+    }
+
     subscriptionManager.deleteSubscription(subscription)
 
+    // Check if the subscription is for aggregated topics (indicated by a comma in the topic string)
     if (topic.includes(',')) {
-      const baseTopic = topic.split(':')[0]
-      const identifiers = topic.split(':')[1].split(',')
-      identifiers.forEach(identifier => {
-        messageDistributor.unregisterSubscription({ id, topic: `${baseTopic}:${identifier}` })
-      })
+      // For aggregated subscriptions, use handleAggregatedSubscriptions to split the topic into individual topics and unregister each separately
+      handleAggregatedSubscriptions({ id, aggregatedTopic: topic }, null, messageDistributor.unregisterSubscription)
     } else {
       messageDistributor.unregisterSubscription({ id, topic })
     }
   }
 
-  function onMessage(data) {
-    messageDistributor.distributeMessage(data)
+  return {
+    subscribe,
+    unsubscribe,
+    distributeMessage: messageDistributor.distributeMessage,
+    getSubscriptions: subscriptionManager.getSubscriptions,
+    getSubscriptionsByTopic: subscriptionManager.getSubscriptionsByTopic,
+    getSubscriptionById: subscriptionManager.getSubscriptionById,
   }
-
-  function getSubscriptions() {
-    return subscriptionManager.getSubscriptions()
-  }
-
-  return { subscribe, unsubscribe, onMessage, getSubscriptions }
 }
