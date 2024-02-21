@@ -17,7 +17,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/order',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -27,7 +27,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/order/test',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -37,7 +37,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/{orderId}?symbol={symbol}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -47,7 +47,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}?symbol={symbol}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -57,7 +57,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders?symbol={symbol}&tradeType={tradeType}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -67,7 +67,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/active?tradeType={tradeType}&symbol={symbol}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -77,7 +77,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/done',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -87,7 +87,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/{orderId}?symbol={symbol}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -97,7 +97,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}?symbol={symbol}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -107,7 +107,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/fills',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -117,7 +117,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/margin/order',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -127,7 +127,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/margin/order/test',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -137,7 +137,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/etf/info',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -147,7 +147,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/mark-price/{symbol}/current',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -157,7 +157,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/margin/config',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -167,7 +167,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/margin/currencies',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -177,7 +177,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/isolated/symbols',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -187,7 +187,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/isolated/accounts',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -197,7 +197,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v1/isolated/account/{symbol}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -207,7 +207,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/margin/borrow',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -217,7 +217,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/margin/repay',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -227,7 +227,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/margin/borrow',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -237,7 +237,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/margin/repay',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -246,7 +246,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/project/list',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -256,7 +256,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/project/marketInterestRate',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -266,7 +266,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/purchase',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -276,7 +276,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/redeem',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -286,7 +286,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/lend/purchase/update',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -296,7 +296,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/purchase/orders',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -306,7 +306,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     return this.makeRequest({
       endpoint: '/api/v3/redeem/orders',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })

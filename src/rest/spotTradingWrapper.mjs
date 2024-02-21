@@ -17,7 +17,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -27,7 +27,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders/test',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -37,7 +37,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders/multi',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -47,7 +47,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders/{orderId}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -57,7 +57,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/order/client-order/{clientOid}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -67,7 +67,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -77,7 +77,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -87,7 +87,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/limit/orders',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -97,7 +97,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/orders/{orderId}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -107,7 +107,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v1/order/client-order/{clientOid}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -117,7 +117,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/order',
       method: 'POST',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -127,7 +127,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/order/{orderId}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -137,7 +137,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/client-order/{clientOid}',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -147,7 +147,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/orders',
       method: 'DELETE',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -157,7 +157,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/order/{orderId}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -167,7 +167,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/order/details/{orderId}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -177,7 +177,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/client-order/{clientOid}',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
@@ -187,7 +187,7 @@ export class SpotTradingWrapper extends composeMixins(marketDataMixin, fillsMixi
     return this.makeRequest({
       endpoint: '/api/v3/oco/orders',
       method: 'GET',
-      requireAuth: true,
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
