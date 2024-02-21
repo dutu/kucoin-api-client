@@ -60,6 +60,7 @@ export class BaseWrapper {
     const axiosConfig = {
       method,
       url: `${this.#baseURLs[baseUrl]}${baseEndpoint}`,
+      headers: {},
       timeout: 5000,
     }
 
