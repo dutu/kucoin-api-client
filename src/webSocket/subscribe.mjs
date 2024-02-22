@@ -32,7 +32,7 @@ import uniqid from 'uniqid'
  * // This example assumes that `subscribeWithContext` is a version of `subscribe`
  * // that has been bound with the appropriate context (logger, webSocket, subPubManager).
  */
-export function subscribe({ logger, webSocket, subPubManager },subscription, callback) {
+export function subscribe({ logger, webSocket, subPubManager }, subscription, callback) {
   const subscriptionToUse = {
     id: uniqid.time(),
     type: 'subscribe',

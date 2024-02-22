@@ -4,7 +4,7 @@ import { MarginTradingWrapper } from './rest/MarginTradingWrapper.mjs'
 import { FuturesTradingWrapper } from './rest/FuturesTradingWrapper.mjs'
 import { createWebSocketClient } from './webSocket/webSocketClient.mjs'
 import { noop } from './utils/noop.mjs'
-import { WebSocketConnectWrapper } from './rest/webSocketConnectWrapper.mjs'
+import { createOrderbookSubscriptionManager } from './orderbook/subscriptionManager.mjs'
 
 /**
  * Kucoin API client, providing access to various trading operations.
@@ -103,6 +103,9 @@ export class Kucoin {
     this.futuresTrading = new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.createSpotWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'spot')
     this.createFuturesWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'futures')
+
+    // Add orderbook manager
+    this.orderbook = createOrderbookSubscriptionManager(credentialsToUse, serviceConfigToUse)
   }
 }
 
