@@ -1,3 +1,4 @@
+
 /**
  * Creates a mix-in to add market data related methods to a trading wrapper class.
  *
@@ -89,6 +90,7 @@ export const marketDataMixin = (Base) => class extends Base {
     return this.makeRequest({
       endpoint: '/api/v3/market/orderbook/level2',
       method: 'GET',
+      requiresAuth: true,
       baseUrl: 'spot',
       params,
       onRateLimitInfoCallback,
