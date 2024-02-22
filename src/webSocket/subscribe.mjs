@@ -1,4 +1,6 @@
 import uniqid from 'uniqid'
+import { uniqueId } from '../utils/uniqueId.mjs'
+
 /**
  * Subscribes to a specified topic with optional parameters within a given context.
  * The context includes logger, webSocket, and subPubManager to facilitate the subscription operation.
@@ -34,7 +36,7 @@ import uniqid from 'uniqid'
  */
 export function subscribe({ logger, webSocket, subPubManager }, subscription, callback) {
   const subscriptionToUse = {
-    id: uniqid.time(),
+    id: uniqueId(),
     type: 'subscribe',
     ...subscription,
   }
