@@ -1,11 +1,11 @@
 import WebSocket from 'isomorphic-ws'
-import uniqid from 'uniqid'
 import { WebSocketConnectWrapper } from '../rest/webSocketConnectWrapper.mjs'
 import { ForeverWebSocket } from 'forever-websocket'
 import { createPubSubManager } from './subPubManager.mjs'
 import { createMessageSequenceValidator } from './messageSequenceValidator.mjs'
 import { unsubscribe } from './unsubscribe.mjs'
 import { subscribe } from './subscribe.mjs'
+import { uniqueId } from '../utils/uniqueId.mjs'
 
 export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
   const log = serviceConfig.logger
@@ -39,7 +39,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
     const connectInfo = await getConnectToken()
     const instanceServer = connectInfo.data.instanceServers[0]
     wsInfo.endpoint = instanceServer.endpoint
-    wsInfo.connectId = uniqid.time()
+    wsInfo.connectId = uniqueId()
     wsInfo.timeout = instanceServer.pingInterval + instanceServer.pingTimeout
     wsInfo.pingId = wsInfo.connectId
     webSocket.updateOptions(
@@ -112,7 +112,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
     const { isValid, expectedSequence } = messageSequenceValidator.isMessageSequential(data)
     if (!isValid) {
       webSocket.refresh()
-      log.debug(`WebSocket[${wsInfo.connectId}] Message out of sequence. Expected ${expectedSequence}, received ${data.data.sequence}`)
+      log.debug(`WebSocket[${wsInfo.connectId}] message out of sequence. Expected ${expectedSequence}, received ${data.data.sequence}`)
     }
 
     subPubManager.distributeMessage(data)
@@ -134,11 +134,11 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
   })
 
   webSocket.on('delay', (retryNumber, delay)=> {
-    log.info(`WebSocket[${wsInfo.connectId}] will reconnected after ${delay / 1000} seconds`)
+    log.info(`WebSocket[${wsInfo.connectId}] will try reconnecting in ${delay / 1000} seconds`)
   })
 
   webSocket.on('connecting', (retryNumber, delay)=> {
-    log.info(`WebSocket[${wsInfo.connectId}] Connecting... (${retryNumber})`)
+    log.info(`WebSocket[${wsInfo.connectId}] connecting... (${retryNumber})`)
   })
 
   webSocket.on('reconnected', (retryNumber, lastConnectedMts)=> {
