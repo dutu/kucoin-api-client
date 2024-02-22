@@ -3,12 +3,14 @@ import { createWebSocketClient } from '../webSocket/webSocketClient.mjs'
 import { SpotTradingWrapper } from '../rest/spotTradingWrapper.mjs'
 import { FuturesTradingWrapper } from '../rest/futuresTradingWrapper.mjs'
 import { createPolynomialBackoff } from '../utils/backoff.mjs'
+import { findIndexReverse } from '../utils/findIndexReverse.mjs'
 
 const Fields = {
   price: 0,
   size: 1,
   seq: 2,
   side: 3,
+  time: 4,
 }
 
 const BaseTopic = {
@@ -21,7 +23,6 @@ export class Orderbook extends EventEmitter {
   #market
   #log
   #webSocketClient
-  #currentSequence = 0
   #isRequestSnapshotInProgress = false
   #cacheSortedBySequence = []
   #orderbook = {}
@@ -40,8 +41,14 @@ export class Orderbook extends EventEmitter {
       ? new SpotTradingWrapper(credentialsToUse, serviceConfigToUse)
       : new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
 
-    // Initiate a WebSocket client to receive orderbook updates
     this.#webSocketClient = createWebSocketClient(credentialsToUse, serviceConfigToUse, market)
+    this.#initiateWebSocketClient()
+  }
+
+  /*
+   * Initiate a WebSocket client to receive orderbook updates
+   */
+  #initiateWebSocketClient() {
     const subscription = {
       type: 'subscribe',
       topic: BaseTopic[this.#market] + this.#symbol,
@@ -49,8 +56,17 @@ export class Orderbook extends EventEmitter {
     }
 
     this.#webSocketClient.subscribe(subscription, this.#applyWebSocketUpdate.bind(this))
+
+    this.#webSocketClient.on('open', () => {
+      this.#requestSnapshot()
+    })
+
+    this.#webSocketClient.on('close', () => {
+      this.#orderbook = {}
+      this.#log.notice(`Orderbook ${this.#symbol} not available`)
+    })
+
     this.#webSocketClient.connect()
-    this.#requestSnapshot()
   }
 
   async #requestSnapshot() {
@@ -61,60 +77,36 @@ export class Orderbook extends EventEmitter {
       try {
         const result = await this.#trading.getFullOrderBook({ symbol: this.#symbol })
         this.#orderbook = result.data
-        break
+        // Check if we hava overlap between orderbook snapshot and cached updates
+        if (this.#cacheSortedBySequence[0] && Number(this.#cacheSortedBySequence[0][Fields.seq]) < Number(this.#orderbook.sequence)) {
+          // if overlap we stop trying to get new snapshots
+          break
+        }
       } catch (e) {
         this.#log.notice(e.message)
-        await this.#backoff.delay()
       }
+
+      await this.#backoff.delay()
     }
 
+    this.#isRequestSnapshotInProgress = false
     this.#backoff.reset()
     this.#applyChangesFromCache()
-    this.#isRequestSnapshotInProgress = false
-    this.emit('orderbook', this.#orderbook)
+    this.#log.info(`Orderbook ${this.#symbol} available and synchronized at sequence ${this.#cacheSortedBySequence[0][Fields.seq]}`)
   }
 
-  #applyChangesFromCache() {
-    const cache = this.#cacheSortedBySequence
-    let index = 0
-    while (index < cache.length) {
-      const change = cache[index]
-
-      // Check if outdated change
-      if (Number(change[Fields.seq]) <= Number(this.#orderbook.sequence)) {
-        cache.splice(index, 1)
-        continue
-      }
-
-      // Check change is next in sequence
-      if (Number(change[Fields.seq]) === Number(this.#orderbook.sequence) + 1) {
-        this.#applyChange(change)
-        index += 1
-        continue
-      }
-
-      // We are missing updates and need to get a new snapshot
-      this.#addChangeToCache(change)
-      this.#requestSnapshot()
-    }
-  }
-
+  /*
+   * Adds a 'change' object to the cache array, which is sorted by the sequence number in ascending order.
+   */
   #addChangeToCache(change) {
     const cache = this.#cacheSortedBySequence
     const sequence = Number(change[Fields.seq])
-    const positionToInsert = cache.findIndex((change) => Number(change[Fields.seq]) >= sequence)
 
-    // Check if all cached sequences are smaller
-    if (positionToInsert === -1) {
-      cache.push(change)
-      return
-    }
+    // Find the position from the end where the change's sequence is just larger than the next item's sequence
+    let positionToInsert = findIndexReverse(cache,(item) => Number(item[Fields.seq]) < sequence)
 
-    // Check if the sequence is already in cache
-    const shouldReplaceExistingPosition = cache[positionToInsert][Fields.seq] === sequence ? 1 : 0
-
-    // Replace or add change to cache
-    cache.splice(positionToInsert, shouldReplaceExistingPosition, change)
+    // Add the change to the cache at the calculated position (increment position to insert after it)
+    cache.splice(positionToInsert + 1, 0, change)
   }
 
 
@@ -126,7 +118,7 @@ export class Orderbook extends EventEmitter {
    * Params:
    * - change: Object containing [price, size, seq, side]
    */
-  #applyChange = (change) => {
+  #applyChange(change) {
     const side = change[Fields.side]
     const obSide = this.#orderbook[side]
     const price = Number(change[Fields.price])
@@ -165,42 +157,47 @@ export class Orderbook extends EventEmitter {
     }
 
     this.#orderbook.sequence = sequence
+    this.#orderbook.time = change[Fields.time]
   }
 
+  #applyChangesFromCache() {
+    if (!this.#orderbook.sequence) {
+      return
+    }
+
+    for (const change of this.#cacheSortedBySequence) {
+      // Check if outdated change
+      if (Number(change[Fields.seq]) > Number(this.#orderbook.sequence)) {
+        // Only apply not-outdated change
+        this.#applyChange(change)
+      }
+    }
+  }
 
   /*
    * Applies changes from an WebSocket update message to the order book.
    */
   #applyWebSocketUpdate(update) {
+    if (update.type === 'ack') {
+      this.#log.info(`WebSocket[${this.#webSocketClient.connectId}] subscribed to orderbook:${this.#symbol}`)
+      return
+    }
+
     if (update.subject !== 'trade.l2update') {
       // Filter out irrelevant messages
       return
     }
 
-    const askChanges = update.data.changes.asks.map((change) => [...change, 'asks'])
-    const bidChanges = update.data.changes.bids.map((change) => [...change, 'bids'])
-    const changesSortedBySequence = [...askChanges, ...bidChanges].sort((a, b) => Number(a[Fields.seq]) - Number(b[Fields.seq]))
-    for (const change of changesSortedBySequence) {
-      const changeSequence = Number(change[Fields.seq])
-      // Check if outdated update
-      if ( changeSequence <= this.#currentSequence) {
-        // Skip change
-        continue
+    // Add updates to cache
+    for (const side of ['asks', 'bids']) {
+      for (const change of update.data.changes[side]) {
+        this.#addChangeToCache([...change, side, update.data.time])
       }
-
-      // Check if the change is the next one in sequence
-      if (changeSequence === this.#currentSequence + 1) {
-        this.#applyChange(change)
-        continue
-      }
-
-      // We are missing updates and need to get a new snapshot
-      this.#addChangeToCache(change)
-      this.#requestSnapshot()
     }
 
-    if (!this.#isRequestSnapshotInProgress) {
-      this.emit('orderbook', this.#orderbook)
+    // Check if we have a valid orderbook
+    if (this.#orderbook.sequence) {
+      this.#applyChangesFromCache()
     }
   }
 
