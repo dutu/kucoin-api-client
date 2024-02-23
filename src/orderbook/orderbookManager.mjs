@@ -18,7 +18,39 @@ const BaseTopic = {
   futures: '/contractMarket/level2:',
 }
 
-export class Orderbook extends EventEmitter {
+/**
+ * Manages and maintains a real-time order book for a given symbol and market (spot or futures) by
+ * interacting with WebSocket and REST endpoints. It subscribes to order book updates via WebSocket,
+ * requests snapshots to ensure data integrity, and emits events to signal order book changes.
+ *
+ * @class OrderbookManager
+ * @extends EventEmitter
+ *
+
+ * Public Methods:
+ * - `setActiveState(value: boolean)`: Activates or deactivates the order book updates.
+ * - `destroy()`: Cleans up resources, unsubscribes from updates, and prepares the instance for disposal.
+ *
+ * Properties:
+ * - `isActive`: Indicates whether the OrderbookManager is currently active and subscribing to updates.
+ *
+ * Events:
+ * - `orderbook`: Emitted whenever the order book is updated with a new state.
+ *
+ * Example:
+ * ```javascript
+ * const orderbookManager = new OrderbookManager({
+ *   symbol: 'BTC-USDT',
+ *   market: 'spot',
+ *   activeState: true
+ * }, credentials, serviceConfig)
+ *
+ * orderbookManager.on('orderbook', (orderbook) => {
+ *   console.log('Updated orderbook:', orderbook)
+ * })
+ * ```
+ */
+export class OrderbookManager extends EventEmitter {
   #symbol
   #market
   #log
@@ -28,9 +60,9 @@ export class Orderbook extends EventEmitter {
   #orderbook = undefined
   #backoff
   #trading
-  #isDestroying = false
+  #isActive = true
 
-  constructor({ symbol, market }, credentialsToUse, serviceConfigToUse) {
+  constructor({ symbol, market, activeState = true }, credentialsToUse, serviceConfigToUse) {
     super()
     this.#symbol = symbol
     this.#market = market
@@ -43,13 +75,59 @@ export class Orderbook extends EventEmitter {
       : new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
 
     this.#webSocketClient = createWebSocketClient(credentialsToUse, serviceConfigToUse, market)
-    this.#initiateWebSocketClient()
+    this.#setupWebSocketClient()
+
+    if (activeState) {
+      this.setActiveState(true)
+    }
+  }
+
+  get isActive() {
+    return this.#isActive
+  }
+
+  setActiveState(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError(`setActiveState must be a boolean, but got ${typeof value}`)
+    }
+
+    if (value) {
+      this.#webSocketClient.connect()
+    } else {
+      this.#webSocketClient.close()
+    }
+
+    this.#isActive = value
+  }
+
+  /**
+   * Cleans up resources and internal state of the Orderbook instance.
+   * This method unsubscribes from the current WebSocket feed, closes the WebSocket connection,
+   * and resets the internal properties to their default states. It should be called when the
+   * Orderbook instance is no longer needed or before creating a new instance to avoid memory leaks
+   * and ensure proper release of resources.
+   */
+  destroy() {
+    this.#isActive = false
+    this.#orderbook = undefined
+    this.emit('orderbook', undefined)
+
+    const subscription = {
+      type: 'unsubscribe',
+      topic: BaseTopic[this.#market] + this.#symbol,
+      response: true,
+    }
+
+    this.#webSocketClient.unsubscribe(subscription, this.#applyWebSocketUpdate.bind(this))
+    this.#webSocketClient.close()
+    this.#webSocketClient = null
+    this.#cacheSortedBySequence = []
   }
 
   /*
    * Initiate a WebSocket client to receive orderbook updates
    */
-  #initiateWebSocketClient() {
+  #setupWebSocketClient() {
     const subscription = {
       type: 'subscribe',
       topic: BaseTopic[this.#market] + this.#symbol,
@@ -67,8 +145,6 @@ export class Orderbook extends EventEmitter {
       this.emit('orderbook', undefined)
       this.#log.notice(`Orderbook ${this.#symbol} not available`)
     })
-
-    this.#webSocketClient.connect()
   }
 
   async #requestSnapshot() {
@@ -76,7 +152,7 @@ export class Orderbook extends EventEmitter {
     this.#isRequestSnapshotInProgress = true
     this.#orderbook = undefined
     this.emit('orderbook', undefined)
-    while (!this.#isDestroying) {
+    while (this.#isActive) {
       try {
         const result = await this.#trading.getFullOrderBook({ symbol: this.#symbol })
         this.#orderbook = result.data
@@ -92,7 +168,7 @@ export class Orderbook extends EventEmitter {
       await this.#backoff.delay()
     }
 
-    if (!this.#isDestroying) {
+    if (this.#isActive) {
       this.#isRequestSnapshotInProgress = false
       this.#backoff.reset()
       this.#applyChangesFromCacheAndEmitOrderbook()
@@ -166,7 +242,7 @@ export class Orderbook extends EventEmitter {
   }
 
   #applyChangesFromCacheAndEmitOrderbook() {
-    if (!this.#orderbook || this.#isDestroying) {
+    if (!this.#orderbook || !this.#isActive) {
       return
     }
 
@@ -185,7 +261,7 @@ export class Orderbook extends EventEmitter {
    * Applies changes from an WebSocket update message to the order book.
    */
   #applyWebSocketUpdate(update) {
-    if (this.#isDestroying) {
+    if (!this.#isActive) {
       return
     }
 
@@ -210,29 +286,5 @@ export class Orderbook extends EventEmitter {
     if (this.#orderbook) {
       this.#applyChangesFromCacheAndEmitOrderbook()
     }
-  }
-
-  /**
-   * Cleans up resources and internal state of the Orderbook instance.
-   * This method unsubscribes from the current WebSocket feed, closes the WebSocket connection,
-   * and resets the internal properties to their default states. It should be called when the
-   * Orderbook instance is no longer needed or before creating a new instance to avoid memory leaks
-   * and ensure proper release of resources.
-   */
-  destroy() {
-    this.#isDestroying = true
-    this.#orderbook = undefined
-    this.emit('orderbook', undefined)
-
-    const subscription = {
-      type: 'unsubscribe',
-      topic: BaseTopic[this.#market] + this.#symbol,
-      response: true,
-    }
-
-    this.#webSocketClient.unsubscribe(subscription, this.#applyWebSocketUpdate.bind(this))
-    this.#webSocketClient.close()
-    this.#webSocketClient = null
-    this.#cacheSortedBySequence = []
   }
 }

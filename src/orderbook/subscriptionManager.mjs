@@ -1,7 +1,7 @@
-import { Orderbook } from './orderbook.mjs'
+import { OrderbookManager } from './orderbookManager.mjs'
 
 /**
- * Creates and manages a subscriptions for orderbooks.
+ * Creates and manages a subscriptions for orderbookManagers.
  *
  * @example
  * const manager = createOrderbookSubscriptionManager()
@@ -10,7 +10,7 @@ import { Orderbook } from './orderbook.mjs'
  * manager.unsubscribe({ symbol: 'BTCUSD' }, callback)
  */
 export function createOrderbookSubscriptionManager(credentialsToUse, serviceConfigToUse) {
-  const orderbooks = {
+  const orderbookManagers = {
     spot: {},
     futures: {},
   }
@@ -22,55 +22,70 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
   }
 
   /**
-   * Subscribes to orderbook updates for a given symbol.
+   * Subscribes to orderbook updates for a given symbol and market.
+   * The subscription begins immediately based on the activeState parameter
    *
-   * @param {Object} param0 - Object containing the symbol to subscribe to.
-   * @param {string} param0.symbol - The symbol of the orderbook to subscribe to.
-   * @param {'spot' | 'futures'} param0.market - The market of the orderbook to subscribe to.
-   * @param {Function} callback - Callback to execute when an update is received.
+   * @param {Object} param0 - Configuration object for subscription.
+   * @param {string} param0.symbol - The symbol of the orderbook to subscribe to (e.g., 'BTCUSD').
+   * @param {'spot' | 'futures'} param0.market - The market type of the orderbook (either 'spot' or 'futures').
+   * @param {boolean} [param0.activeState=true] - Indicates whether to start receiving updates immediately.
+   * @param {Function} callback - Function to call with orderbook updates. Receives the updated data as its argument.
+   * @returns {OrderbookManager} The OrderbookManager instance managing the subscription.
+   *
    */
-  function subscribe({ symbol, market }, callback) {
+  function subscribe({ symbol, market, activeState = true }, callback) {
     validateMarket(market)
 
     // Check if we already maintain the orderbook for this symbol
-    if (orderbooks[market][symbol]) {
+    if (orderbookManagers[market][symbol]) {
       // Check if listener is already registered
-      if (orderbooks[market][symbol].listenerCount('orderbook', callback) > 0) {
-        return
+      if (orderbookManagers[market][symbol].listenerCount('orderbook', callback) > 0) {
+        return orderbookManagers[market][symbol]
       }
 
       // Register listener
-      orderbooks[market][symbol].addListener('orderbook', callback)
+      orderbookManagers[market][symbol].addListener('orderbook', callback)
     } else {
-      orderbooks[market][symbol] = new Orderbook({ symbol, market }, credentialsToUse, serviceConfigToUse )
-      orderbooks[market][symbol].addListener('orderbook', callback)
+      orderbookManagers[market][symbol] = new OrderbookManager({ symbol, market, activeState }, credentialsToUse, serviceConfigToUse )
+      orderbookManagers[market][symbol].addListener('orderbook', callback)
+      return orderbookManagers[market][symbol]
     }
   }
 
   /**
    * Unsubscribes from orderbook updates for a given symbol.
    *
-   * @param {Object} param0 - Object containing the symbol to unsubscribe from.
+   * This function removes the specified callback from the orderbook updates of the given symbol and market.
+   * If the callback is successfully removed and there are still other listeners present, it returns the
+   * OrderbookManager instance for further operations. If there are no more listeners after removal, it stops
+   * the OrderbookManager for that symbol and market and deletes its reference, returning null. If the symbol
+   * and market combination does not exist, it returns undefined.
+   *
+   * @param {Object} param0 - Configuration object for unsubscription.
    * @param {string} param0.symbol - The symbol of the orderbook to unsubscribe from.
-   * @param {'spot' | 'futures'} param0.market - The market of the orderbook to subscribe to.
+   * @param {'spot' | 'futures'} param0.market - The market of the orderbook to unsubscribe from.
    * @param {Function} callback - Callback that was used for subscription.
+   * @returns {OrderbookManager|null|undefined} The OrderbookManager instance if other listeners are still present,
+   * null if the OrderbookManager was stopped and deleted, or undefined if the symbol and market combination was not found.
    */
   function unsubscribe({ symbol, market }, callback) {
     validateMarket(market)
 
-    if (!orderbooks[market][symbol]) {
-      return
+    if (!orderbookManagers[market][symbol]) {
+      return undefined
     }
 
-    if (orderbooks[market][symbol].listenerCount('orderbook', callback) > 0) {
-      orderbooks[market][symbol].removeListener('orderbook', callback)
+    if (orderbookManagers[market][symbol].listenerCount('orderbook', callback) > 0) {
+      orderbookManagers[market][symbol].removeListener('orderbook', callback)
+      return orderbookManagers[market][symbol]
     }
 
-    if (orderbooks[market][symbol].listenerCount('orderbook') === 0) {
-      orderbooks[market][symbol].stop()
-      delete orderbooks[market][symbol]
+    if (orderbookManagers[market][symbol].listenerCount('orderbook') === 0) {
+      orderbookManagers[market][symbol].stop()
+      delete orderbookManagers[market][symbol]
+      return null
     }
   }
-
+  
   return { subscribe, unsubscribe }
 }
