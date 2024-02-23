@@ -25,9 +25,10 @@ export class Orderbook extends EventEmitter {
   #webSocketClient
   #isRequestSnapshotInProgress = false
   #cacheSortedBySequence = []
-  #orderbook = {}
+  #orderbook = undefined
   #backoff
   #trading
+  #isDestroying = false
 
   constructor({ symbol, market }, credentialsToUse, serviceConfigToUse) {
     super()
@@ -62,7 +63,8 @@ export class Orderbook extends EventEmitter {
     })
 
     this.#webSocketClient.on('close', () => {
-      this.#orderbook = {}
+      this.#orderbook = undefined
+      this.emit('orderbook', undefined)
       this.#log.notice(`Orderbook ${this.#symbol} not available`)
     })
 
@@ -72,8 +74,9 @@ export class Orderbook extends EventEmitter {
   async #requestSnapshot() {
     if (this.#isRequestSnapshotInProgress) return
     this.#isRequestSnapshotInProgress = true
-    this.#orderbook = {}
-    while (true) {
+    this.#orderbook = undefined
+    this.emit('orderbook', undefined)
+    while (!this.#isDestroying) {
       try {
         const result = await this.#trading.getFullOrderBook({ symbol: this.#symbol })
         this.#orderbook = result.data
@@ -89,10 +92,12 @@ export class Orderbook extends EventEmitter {
       await this.#backoff.delay()
     }
 
-    this.#isRequestSnapshotInProgress = false
-    this.#backoff.reset()
-    this.#applyChangesFromCache()
-    this.#log.info(`Orderbook ${this.#symbol} available and synchronized at sequence ${this.#cacheSortedBySequence[0][Fields.seq]}`)
+    if (!this.#isDestroying) {
+      this.#isRequestSnapshotInProgress = false
+      this.#backoff.reset()
+      this.#applyChangesFromCacheAndEmitOrderbook()
+      this.#log.info(`Orderbook ${this.#symbol} available and synchronized at sequence ${this.#cacheSortedBySequence[0][Fields.seq]}`)
+    }
   }
 
   /*
@@ -160,8 +165,8 @@ export class Orderbook extends EventEmitter {
     this.#orderbook.time = change[Fields.time]
   }
 
-  #applyChangesFromCache() {
-    if (!this.#orderbook.sequence) {
+  #applyChangesFromCacheAndEmitOrderbook() {
+    if (!this.#orderbook || this.#isDestroying) {
       return
     }
 
@@ -172,12 +177,18 @@ export class Orderbook extends EventEmitter {
         this.#applyChange(change)
       }
     }
+
+    this.emit('orderbook', this.#orderbook)
   }
 
   /*
    * Applies changes from an WebSocket update message to the order book.
    */
   #applyWebSocketUpdate(update) {
+    if (this.#isDestroying) {
+      return
+    }
+
     if (update.type === 'ack') {
       this.#log.info(`WebSocket[${this.#webSocketClient.connectId}] subscribed to orderbook:${this.#symbol}`)
       return
@@ -196,8 +207,8 @@ export class Orderbook extends EventEmitter {
     }
 
     // Check if we have a valid orderbook
-    if (this.#orderbook.sequence) {
-      this.#applyChangesFromCache()
+    if (this.#orderbook) {
+      this.#applyChangesFromCacheAndEmitOrderbook()
     }
   }
 
@@ -209,6 +220,10 @@ export class Orderbook extends EventEmitter {
    * and ensure proper release of resources.
    */
   destroy() {
+    this.#isDestroying = true
+    this.#orderbook = undefined
+    this.emit('orderbook', undefined)
+
     const subscription = {
       type: 'unsubscribe',
       topic: BaseTopic[this.#market] + this.#symbol,
@@ -218,7 +233,6 @@ export class Orderbook extends EventEmitter {
     this.#webSocketClient.unsubscribe(subscription, this.#applyWebSocketUpdate.bind(this))
     this.#webSocketClient.close()
     this.#webSocketClient = null
-    this.#orderbook = {}
     this.#cacheSortedBySequence = []
   }
 }
