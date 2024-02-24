@@ -48,6 +48,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
           interval: instanceServer.pingInterval,
           data: {
             id: wsInfo.pingId,
+            type: 'ping',
           }
         },
         timeout: wsInfo.timeout,
@@ -67,7 +68,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
         interval: 30000,
         data: {
           id: wsInfo.pingId,
-          type: "ping",
+          type: 'ping',
         }
       },
       createWebSocket,
@@ -97,7 +98,8 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
     const data = JSON.parse(message)
 
     if (data.type === 'pong' && data.id === wsInfo.pingId ) {
-      log.debug(`WebSocket[[${wsInfo.connectId}] pong`)
+      log.debug(`WebSocket[${wsInfo.connectId}] pong`)
+      webSocket.emit('pong', data)
       return
     }
 
