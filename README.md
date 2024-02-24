@@ -1,1 +1,1 @@
-# kucoin-api-node
+# kucoin-api-client

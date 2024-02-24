@@ -1,5 +1,5 @@
 {
-  "name": "@dutu/kucoin-api-node",
+  "name": "kucoin-api-client",
   "version": "0.1.0",
   "description": "KuCoin API client for REST and WebSocket API",
   "type": "module",
@@ -7,12 +7,12 @@
   "exports": "./src/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dutu/kucoin-api-node.git"
+    "url": "git+https://github.com/dutu/kucoin-api-client.git"
   },
   "bugs": {
-    "url": "https://github.com/dutu/kucoin-api-node/issues"
+    "url": "https://github.com/dutu/kucoin-api-client/issues"
   },
-  "homepage": "https://github.com/dutu/kucoin-api-node#readme",
+  "homepage": "https://github.com/dutu/kucoin-api-client#readme",
   "keywords": [
     "KuCoin",
     "API",
