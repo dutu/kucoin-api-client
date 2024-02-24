@@ -108,6 +108,11 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
       return
     }
 
+    if (data.type === 'error') {
+      log.error(`WebSocket[${wsInfo.connectId}] error:\n${JSON.stringify(data, null, 2)}`)
+      return
+    }
+
     // Verify message sequence
     const { isValid, expectedSequence } = messageSequenceValidator.isMessageSequential(data)
     if (!isValid) {
