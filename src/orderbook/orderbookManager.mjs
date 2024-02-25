@@ -215,6 +215,7 @@ export class OrderbookManager extends EventEmitter {
       // Ignore the messages and update the sequence
       this.#orderbook.sequence = sequence
       this.#orderbook.time = change[Fields.time]
+      return
     }
 
     // Find the index where price is less than (for bids) or greater than (for asks) the current price
