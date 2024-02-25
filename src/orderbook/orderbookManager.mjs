@@ -210,6 +210,13 @@ export class OrderbookManager extends EventEmitter {
       this.#orderbook[side] = []
     }
 
+    // Check if the price is 0
+    if (price === 0) {
+      // Ignore the messages and update the sequence
+      this.#orderbook.sequence = sequence
+      this.#orderbook.time = change[Fields.time]
+    }
+
     // Find the index where price is less than (for bids) or greater than (for asks) the current price
     // or where the price is exactly equal to handle the update or delete
     const index = obSide.findIndex((entry) => {
