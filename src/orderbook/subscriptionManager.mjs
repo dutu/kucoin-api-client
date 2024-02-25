@@ -44,10 +44,10 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
       }
 
       // Register listener
-      orderbookManagers[market][symbol].addEventListener('orderbook', callback)
+      orderbookManagers[market][symbol].addListener('orderbook', callback)
     } else {
       orderbookManagers[market][symbol] = new OrderbookManager({ symbol, market, activeState }, credentialsToUse, serviceConfigToUse )
-      orderbookManagers[market][symbol].addEventListener('orderbook', callback)
+      orderbookManagers[market][symbol].addListener('orderbook', callback)
       return orderbookManagers[market][symbol]
     }
   }
