@@ -198,6 +198,8 @@ export class OrderbookManager extends EventEmitter {
    *
    * Params:
    * - change: Object containing [price, size, seq, side]
+   * Returns:
+   * - index: The index position where the applied into the orderbook asks or bids, or undefined if there was no change
    */
   #applyChange(change) {
     const side = change[Fields.side]
@@ -205,6 +207,7 @@ export class OrderbookManager extends EventEmitter {
     const price = Number(change[Fields.price])
     const size = change[Fields.size]
     const sequence = change[Fields.seq]
+    let index
 
     if (!this.#orderbook[side]) {
       this.#orderbook[side] = []
@@ -215,12 +218,12 @@ export class OrderbookManager extends EventEmitter {
       // Ignore the messages and update the sequence
       this.#orderbook.sequence = sequence
       this.#orderbook.time = change[Fields.time]
-      return
+      return undefined
     }
 
     // Find the index where price is less than (for bids) or greater than (for asks) the current price
     // or where the price is exactly equal to handle the update or delete
-    const index = obSide.findIndex((entry) => {
+    index = obSide.findIndex((entry) => {
       return side === 'asks' ? Number(entry[Fields.price]) >= price : Number(entry[Fields.price]) <= price
     })
 
@@ -243,10 +246,12 @@ export class OrderbookManager extends EventEmitter {
       // No entry found, or should be added to the end
       const newEntry = [change[Fields.price], size]
       obSide.push(newEntry)
+      index = obSide.length - 1
     }
 
     this.#orderbook.sequence = sequence
     this.#orderbook.time = change[Fields.time]
+    return index
   }
 
   #applyChangesFromCacheAndEmitOrderbook() {
@@ -254,15 +259,23 @@ export class OrderbookManager extends EventEmitter {
       return
     }
 
+    let minModifiedIndex
     for (const change of this.#cacheSortedBySequence) {
       // Check if outdated change
       if (Number(change[Fields.seq]) > Number(this.#orderbook.sequence)) {
         // Only apply not-outdated change
-        this.#applyChange(change)
+        const modifiedIndex = this.#applyChange(change)
+
+        // Update minModifiedIndex only if modifiedIndex is defined and either minModifiedIndex is undefined or modifiedIndex is smaller
+        if (modifiedIndex !== undefined && (minModifiedIndex === undefined || modifiedIndex < minModifiedIndex)) {
+          minModifiedIndex = modifiedIndex
+        }
       }
     }
 
-    this.emit('orderbook', this.#orderbook)
+    if (minModifiedIndex !== undefined) {
+      this.emit('orderbook', this.#orderbook, { minModifiedIndex })
+    }
   }
 
   /*

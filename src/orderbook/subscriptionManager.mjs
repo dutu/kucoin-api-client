@@ -15,56 +15,92 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
     futures: {},
   }
 
-  function validateMarket(market) {
+  const depthLimitedCallbacks = {}
+
+  function generateSubscriptionKey(symbol, market, depth) {
+    return `${market}:${symbol}:${depth}`
+  }
+
+  const validateMarket = function validateMarket(market) {
     if (!(market === 'spot' || market === 'futures')) {
       throw new Error('market must be "spot" or "futures"')
     }
   }
 
   /**
-   * Subscribes to orderbook updates for a given symbol and market.
-   * The subscription begins immediately based on the activeState parameter
+   * Subscribes to orderbook updates for a given symbol and market and orderbook depth.
    *
    * @param {Object} param0 - Configuration object for subscription.
    * @param {string} param0.symbol - The symbol of the orderbook to subscribe to (e.g., 'BTCUSD').
-   * @param {'spot' | 'futures'} param0.market - The market type of the orderbook (either 'spot' or 'futures').
+   * @param {'spot' | 'futures'} [param0.market='spot'] - The market type of the orderbook (either 'spot' or 'futures').
+   * @param {number} [param0.depth] - The maximum number of orderbook entries to return in each update If parameter is not specified, the full orderbook is returned.
    * @param {Function} callback - Function to call with orderbook updates. Receives the updated data as its argument.
    *
    */
-  function subscribe({ symbol, market}, callback) {
+  function subscribe({ symbol, market = 'spot', depth, }, callback) {
     validateMarket(market)
 
-    // Create a new Orderoom Manager only if one doesn't exists already for this symbol
+    // Create a new Orderoom Manager only if one doesn't exist already for this symbol
     orderbookManagers[market][symbol] ??= new OrderbookManager({ symbol, market }, credentialsToUse, serviceConfigToUse )
 
-    // Only register the listener if not already registered
-    if (orderbookManagers[market][symbol].listenerCount('orderbook', callback) === 0) {
-      orderbookManagers[market][symbol].addListener('orderbook', callback)
+    const subscriptionKey = generateSubscriptionKey(symbol, market, depth)
+    // Check if a modified callback exists for these parameters, otherwise create one and add it as listener
+    if (!depthLimitedCallbacks[subscriptionKey]) {
+      depthLimitedCallbacks[subscriptionKey] = (orderbook, params) => {
+        if (!orderbook) {
+          callback(orderbook)
+        } else {
+          if (params.minModifiedIndex <= depth ) {
+            const depthLimitedOrderbook = {
+              ...orderbook,
+              asks: orderbook.asks.slice(0, depth),
+              bids: orderbook.bids.slice(0, depth)
+            }
+
+            callback(depthLimitedOrderbook)
+          }
+        }
+      }
+
+      const depthLimitedCallback =  depthLimitedCallbacks[subscriptionKey]
+      orderbookManagers[market][symbol].addListener('orderbook', depthLimitedCallback)
     }
   }
 
   /**
-   * Unsubscribes from orderbook updates for a given symbol.
-   *
-   * This function removes the specified callback from the orderbook updates of the given symbol and market.
-   * If the callback is successfully removed and there are still other listeners present, it returns the
-   * OrderbookManager instance for further operations. If there are no more listeners after removal, it stops
-   * the OrderbookManager for that symbol and market and deletes its reference, returning null. If the symbol
-   * and market combination does not exist, it returns undefined.
+   * Unsubscribes from orderbook updates for a given symbol, market, and depth.
+   * This function removes the specified callback from the orderbook updates. If the callback
+   * is associated with a specific depth, it removes the depth-limited callback. After removal,
+   * if there are no more listeners for the orderbook of the given symbol and market, it stops
+   * the OrderbookManager for that symbol and market and deletes its reference.
    *
    * @param {Object} param0 - Configuration object for unsubscription.
-   * @param {string} param0.symbol - The symbol of the orderbook to unsubscribe from.
-   * @param {'spot' | 'futures'} param0.market - The market of the orderbook to unsubscribe from.
-   * @param {Function} callback - Callback that was used for subscription.
+   * @param {string} param0.symbol - The symbol of the orderbook to unsubscribe from (e.g., 'BTCUSD').
+   * @param {'spot' | 'futures'} [param0.market='spot'] - The market of the orderbook to unsubscribe from.
+   * @param {number} [param0.depth] - The depth of the orderbook entries to unsubscribe from.
+   * @param {Function} callback - The callback function that was used for subscription.
+   * @throws {Error} Throws an error if the callback is not registered as a listener for the specified
+   * orderbook, symbol, market, and depth, indicating that either the subscription key is invalid or
+   * the callback was never subscribed.
+   *
+   * @example
+   * const manager = createOrderbookSubscriptionManager();
+   * const callback = data => console.log('Orderbook Update:', data);
+   * manager.subscribe({ symbol: 'BTCUSD', market: 'spot', depth: 10 }, callback);
+   * // Later...
+   * manager.unsubscribe({ symbol: 'BTCUSD', market: 'spot', depth: 10 }, callback);
    */
-  function unsubscribe({ symbol, market }, callback) {
+  function unsubscribe({ symbol, market = 'spot', depth }, callback) {
     validateMarket(market)
 
-    if (!orderbookManagers[market][symbol] || orderbookManagers[market][symbol].listenerCount('orderbook') === 0) {
-      throw new Error(`Callback is not registered as a listener for orderbook ${market}/${symbol}`)
+    const subscriptionKey = generateSubscriptionKey(symbol, market, depth)
+    const depthLimitedCallback = depthLimitedCallbacks[subscriptionKey]
+    if (depthLimitedCallback) {
+      delete depthLimitedCallbacks[subscriptionKey]
+      orderbookManagers[market][symbol].removeListener('orderbook', depthLimitedCallback)
+    } else {
+      throw new Error(`Callback is not registered as a listener for orderbook ${market}:${symbol}:${depth}`)
     }
-
-    orderbookManagers[market][symbol].removeListener('orderbook', callback)
   }
   
   return { subscribe, unsubscribe }
