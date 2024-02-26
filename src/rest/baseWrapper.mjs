@@ -94,7 +94,7 @@ export class BaseWrapper {
     try {
       response = await axios(axiosConfig)
       if (!(response.status === 200 && response.data?.code === '200000')) {
-        throw new Error(`${response.data?.code || response.status}: ${response.statusText}`)
+        throw new Error(`${response.data?.code || response.status}: ${response.data?.msg || response.statusText}`)
       }
     } catch (error) {
       throw new Error(error.response ? `${error.response.status}: ${error.response.statusText}` : error.message)
