@@ -253,6 +253,9 @@ export class OrderbookManager extends EventEmitter {
       }
     }
 
+    // Empty cache after processing
+    this.#cacheSortedBySequence = []
+
     if (minModifiedIndex !== undefined) {
       this.emit('orderbook', this.#orderbook, { minModifiedIndex })
     }
