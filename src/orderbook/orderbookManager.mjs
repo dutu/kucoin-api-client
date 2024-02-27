@@ -60,9 +60,9 @@ export class OrderbookManager extends EventEmitter {
   #orderbook = undefined
   #backoff
   #trading
-  #isActive
+  #isActive = true
 
-  constructor({ symbol, market, activeState = true }, credentialsToUse, serviceConfigToUse) {
+  constructor({ symbol, market }, credentialsToUse, serviceConfigToUse) {
     super()
     this.#symbol = symbol
     this.#market = market
@@ -77,7 +77,6 @@ export class OrderbookManager extends EventEmitter {
     this.#webSocketClient = createWebSocketClient(credentialsToUse, serviceConfigToUse, market)
     this.#setupWebSocketClient()
 
-    this.#isActive = true
     this.#webSocketClient.connect()
   }
 
@@ -98,7 +97,7 @@ export class OrderbookManager extends EventEmitter {
       response: true,
     }
 
-    this.#webSocketClient.unsubscribe(subscription, this.#applyWebSocketUpdate.bind(this))
+    this.#webSocketClient.unsubscribe(subscription, this.#applyWebSocketUpdate)
     this.#webSocketClient.close()
     this.#webSocketClient = null
     this.#cacheSortedBySequence = []
@@ -115,7 +114,7 @@ export class OrderbookManager extends EventEmitter {
       response: true,
     }
 
-    this.#webSocketClient.subscribe(subscription, this.#applyWebSocketUpdate.bind(this))
+    this.#webSocketClient.subscribe(subscription, this.#applyWebSocketUpdate)
 
     this.#webSocketClient.on('open', () => {
       this.#requestSnapshot()
@@ -261,8 +260,9 @@ export class OrderbookManager extends EventEmitter {
 
   /*
    * Applies changes from an WebSocket update message to the order book.
+   * (Use arrow function, so we can always run it in "this" context
    */
-  #applyWebSocketUpdate(update) {
+  #applyWebSocketUpdate = (update) => {
     if (!this.#isActive) {
       return
     }

@@ -40,7 +40,7 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
   function subscribe({ symbol, market = 'spot', depth, }, callback) {
     validateMarket(market)
 
-    // Create a new Orderoom Manager only if one doesn't exist already for this symbol
+    // Create a new Orderbook Manager only if one doesn't exist already for this symbol
     orderbookManagers[market][symbol] ??= new OrderbookManager({ symbol, market }, credentialsToUse, serviceConfigToUse )
 
     const subscriptionKey = generateSubscriptionKey(symbol, market, depth)
@@ -52,7 +52,8 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
         } else {
           if (params.minModifiedIndex <= depth ) {
             const depthLimitedOrderbook = {
-              ...orderbook,
+              sequence: orderbook.sequence,
+              time: orderbook.time,
               asks: orderbook.asks.slice(0, depth),
               bids: orderbook.bids.slice(0, depth)
             }
@@ -95,9 +96,16 @@ export function createOrderbookSubscriptionManager(credentialsToUse, serviceConf
 
     const subscriptionKey = generateSubscriptionKey(symbol, market, depth)
     const depthLimitedCallback = depthLimitedCallbacks[subscriptionKey]
+    const orderbookManager = orderbookManagers[market][symbol]
     if (depthLimitedCallback) {
       delete depthLimitedCallbacks[subscriptionKey]
-      orderbookManagers[market][symbol].removeListener('orderbook', depthLimitedCallback)
+      orderbookManager.removeListener('orderbook', depthLimitedCallback)
+
+      // Destroy and dispose the orderbook manager resources when there is no other listener for that symbol
+      if (orderbookManager.listenerCount('orderbook') === 0) {
+        orderbookManager.destroy()
+        delete orderbookManagers[market][symbol]
+      }
     } else {
       throw new Error(`Callback is not registered as a listener for orderbook ${market}:${symbol}:${depth}`)
     }
