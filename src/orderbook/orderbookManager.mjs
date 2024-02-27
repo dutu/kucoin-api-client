@@ -60,7 +60,7 @@ export class OrderbookManager extends EventEmitter {
   #orderbook = undefined
   #backoff
   #trading
-  #isActive = true
+  #isActive
 
   constructor({ symbol, market, activeState = true }, credentialsToUse, serviceConfigToUse) {
     super()
@@ -77,27 +77,8 @@ export class OrderbookManager extends EventEmitter {
     this.#webSocketClient = createWebSocketClient(credentialsToUse, serviceConfigToUse, market)
     this.#setupWebSocketClient()
 
-    if (activeState) {
-      this.setActiveState(true)
-    }
-  }
-
-  get isActive() {
-    return this.#isActive
-  }
-
-  setActiveState(value) {
-    if (typeof value !== 'boolean') {
-      throw new TypeError(`setActiveState must be a boolean, but got ${typeof value}`)
-    }
-
-    if (value) {
-      this.#webSocketClient.connect()
-    } else {
-      this.#webSocketClient.close()
-    }
-
-    this.#isActive = value
+    this.#isActive = true
+    this.#webSocketClient.connect()
   }
 
   /**
@@ -109,7 +90,6 @@ export class OrderbookManager extends EventEmitter {
    */
   destroy() {
     this.#isActive = false
-    this.#orderbook = undefined
     this.emit('orderbook', undefined)
 
     const subscription = {
@@ -122,6 +102,7 @@ export class OrderbookManager extends EventEmitter {
     this.#webSocketClient.close()
     this.#webSocketClient = null
     this.#cacheSortedBySequence = []
+    this.#orderbook = undefined
   }
 
   /*
