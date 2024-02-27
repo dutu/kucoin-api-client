@@ -264,7 +264,7 @@ export class OrderbookManager extends EventEmitter {
       this.emit('orderbook', this.#orderbook, { minModifiedIndex })
     }
 
-    return { synchronizedAtSequence }
+    return synchronizedAtSequence ? { synchronizedAtSequence } : undefined
   }
 
   /*
