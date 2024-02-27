@@ -151,8 +151,10 @@ export class OrderbookManager extends EventEmitter {
     if (this.#isActive) {
       this.#isRequestSnapshotInProgress = false
       this.#backoff.reset()
-      this.#applyChangesFromCacheAndEmitOrderbook()
-      this.#log.info(`Orderbook ${this.#symbol} available and synchronized at sequence ${this.#cacheSortedBySequence[0][Fields.seq]}`)
+      const res = this.#applyChangesFromCacheAndEmitOrderbook()
+      if (res) {
+        this.#log.info(`Orderbook ${this.#symbol} available and synchronized at sequence ${res.synchronizedAtSequence}`)
+      }
     }
   }
 
@@ -239,11 +241,13 @@ export class OrderbookManager extends EventEmitter {
       return
     }
 
+    let synchronizedAtSequence
     let minModifiedIndex
     for (const change of this.#cacheSortedBySequence) {
       // Check if outdated change
       if (Number(change[Fields.seq]) > Number(this.#orderbook.sequence)) {
         // Only apply not-outdated change
+        synchronizedAtSequence ??= change[Fields.seq]
         const modifiedIndex = this.#applyChange(change)
 
         // Update minModifiedIndex only if modifiedIndex is defined and either minModifiedIndex is undefined or modifiedIndex is smaller
@@ -259,6 +263,8 @@ export class OrderbookManager extends EventEmitter {
     if (minModifiedIndex !== undefined) {
       this.emit('orderbook', this.#orderbook, { minModifiedIndex })
     }
+
+    return { synchronizedAtSequence }
   }
 
   /*
