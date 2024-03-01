@@ -1,10 +1,11 @@
-import { SpotTradingWrapper } from './rest/spotTradingWrapper.mjs'
 import { AccountWrapper } from './rest/accountWrapper.mjs'
+import { FundingWrapper } from './rest/fundingWrapper.mjs'
+import { SpotTradingWrapper } from './rest/spotTradingWrapper.mjs'
 import { MarginTradingWrapper } from './rest/MarginTradingWrapper.mjs'
 import { FuturesTradingWrapper } from './rest/FuturesTradingWrapper.mjs'
 import { createWebSocketClient } from './webSocket/webSocketClient.mjs'
-import { noop } from './utils/noop.mjs'
 import { createOrderbookSubscriptionManager } from './orderbook/subscriptionManager.mjs'
+import { noop } from './utils/noop.mjs'
 
 /**
  * Kucoin API client, providing access to various trading operations.
@@ -98,6 +99,7 @@ export class Kucoin {
 
     // Instantiate wrapper classes with either the complete credentials or undefined
     this.account = new AccountWrapper(credentialsToUse, serviceConfigToUse)
+    this.funding = new FundingWrapper(credentialsToUse, serviceConfigToUse)
     this.spotTrading = new SpotTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.marginTrading = new MarginTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.futuresTrading = new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
