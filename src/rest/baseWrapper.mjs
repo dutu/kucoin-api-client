@@ -84,10 +84,8 @@ export class BaseWrapper {
       axiosConfig.headers['KC-API-TIMESTAMP'] = timestamp
       axiosConfig.headers['Content-Type'] = 'application/json'
 
-      if (this.#credentials.apiKeyVersion.toString() === '2') {
-        axiosConfig.headers['KC-API-PASSPHRASE'] = crypto.createHmac('sha256', this.#credentials.apiSecret).update(this.#credentials.apiPassphrase).digest('base64')
-        axiosConfig.headers['KC-API-KEY-VERSION'] = 2
-      }
+      axiosConfig.headers['KC-API-PASSPHRASE'] = crypto.createHmac('sha256', this.#credentials.apiSecret).update(this.#credentials.apiPassphrase).digest('base64')
+      axiosConfig.headers['KC-API-KEY-VERSION'] = 2
     }
 
     let response
