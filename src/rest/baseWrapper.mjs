@@ -95,7 +95,12 @@ export class BaseWrapper {
         throw new Error(`${response.data?.code || response.status}: ${response.data?.msg || response.statusText}`)
       }
     } catch (error) {
-      throw new Error(error.response ? `${error.response.status}: ${error.response.statusText}` : error.message)
+      let errorMessage = error.response ? `${error.response.status}: ${error.response.statusText}` : error.message
+      if (error.response.data?.code) {
+        errorMessage += `. ${error.response.data?.code}: ${error.response.data?.msg}`
+      }
+
+      throw new Error(errorMessage)
     }
 
     // Extract rate limit information
