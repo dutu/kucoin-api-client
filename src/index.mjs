@@ -1,5 +1,4 @@
 import { AccountWrapper } from './rest/accountWrapper.mjs'
-import { FundingWrapper } from './rest/fundingWrapper.mjs'
 import { SpotTradingWrapper } from './rest/spotTradingWrapper.mjs'
 import { MarginTradingWrapper } from './rest/marginTradingWrapper.mjs'
 import { FuturesTradingWrapper } from './rest/futuresTradingWrapper.mjs'
@@ -99,10 +98,9 @@ export class Kucoin {
 
     // Instantiate wrapper classes with either the complete credentials or undefined
     this.account = new AccountWrapper(credentialsToUse, serviceConfigToUse)
-    this.funding = new FundingWrapper(credentialsToUse, serviceConfigToUse)
-    this.spotTrading = new SpotTradingWrapper(credentialsToUse, serviceConfigToUse)
-    this.marginTrading = new MarginTradingWrapper(credentialsToUse, serviceConfigToUse)
-    this.futuresTrading = new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
+    this.spot = new SpotTradingWrapper(credentialsToUse, serviceConfigToUse)
+    this.margin = new MarginTradingWrapper(credentialsToUse, serviceConfigToUse)
+    this.futures = new FuturesTradingWrapper(credentialsToUse, serviceConfigToUse)
     this.createSpotWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'spot')
     this.createFuturesWebSocketClient = () => createWebSocketClient(credentialsToUse, serviceConfigToUse, 'futures')
 

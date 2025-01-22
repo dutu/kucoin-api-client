@@ -10,6 +10,7 @@ export class BaseWrapper {
   #baseURLs = {
     spot: `https://api.kucoin.com`,
     futures: 'https://api-futures.kucoin.com',
+    broker: 'https://api-broker.kucoin.com',
   }
 
   constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { onApiCallRateInfo, logger }) {

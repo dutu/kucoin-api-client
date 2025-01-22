@@ -1,27 +1,29 @@
 import WebSocket from 'isomorphic-ws'
-import { WebSocketConnectWrapper } from '../rest/webSocketConnectWrapper.mjs'
 import { ForeverWebSocket } from 'forever-websocket'
 import { createPubSubManager } from './subPubManager.mjs'
 import { createMessageSequenceValidator } from './messageSequenceValidator.mjs'
 import { unsubscribe } from './unsubscribe.mjs'
 import { subscribe } from './subscribe.mjs'
 import { uniqueId } from '../utils/uniqueId.mjs'
+import { SpotTradingWrapper } from '../rest/spotTradingWrapper.mjs'
+import { FuturesTradingWrapper } from '../rest/futuresTradingWrapper.mjs'
 
 export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
   const log = serviceConfig.logger
-  const webSocketConnect = new WebSocketConnectWrapper(credentialsToUse, serviceConfig)
+  const spot = new SpotTradingWrapper(credentialsToUse, serviceConfig)
+  const futures = new FuturesTradingWrapper(credentialsToUse, serviceConfig)
   const getConnectTokenFunctions = {
     spot: {
-      public: webSocketConnect.getSpotPublicChannelsToken,
-      private: webSocketConnect.getSpotPrivateChannelsToken,
+      public: spot.market.getPublicToken,
+      private:spot.market.getPrivateToken,
     },
     futures: {
-      public: webSocketConnect.getFuturesPublicChannelsToken,
-      private: webSocketConnect.getFuturesPrivateChannelsToken,
+      public: futures.market.getPublicToken,
+      private: futures.market.getPrivateToken,
     },
   }
 
-  const getConnectToken = getConnectTokenFunctions[market][credentialsToUse.apiKey ? 'private' : 'public'].bind(webSocketConnect)
+  const getConnectToken = getConnectTokenFunctions[market][credentialsToUse.apiKey ? 'private' : 'public'].bind(spot)
 
   let webSocket
   let wsInfo = {
