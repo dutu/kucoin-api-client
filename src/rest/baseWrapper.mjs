@@ -1,7 +1,6 @@
 import crypto from 'crypto'
 import axios from 'axios'
 import { toQueryString } from '../utils/toQueryString.mjs'
-import { convertNumbersToStrings } from '../utils/convertNumbersToStrings.mjs'
 
 export class BaseWrapper {
   #credentials
