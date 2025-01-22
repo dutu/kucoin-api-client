@@ -1,19 +1,18 @@
 import { BaseWrapper } from './baseWrapper.mjs'
-import { marketDataMixin } from './mixins/marketDataMixin.mjs'
-import { fillsMixin } from './mixins/fillsMixin.mjs'
-import { stopOrderMixin } from './mixins/stopOrderMixin.mjs'
-import { composeMixins } from '../utils/composeMixins.mjs'
 
 /**
  * Class representing the Margin Trading functionality.
- * The class uses mixins to include trading methods common for spot and margin.
  */
-export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMixin, stopOrderMixin)(BaseWrapper) {
+export class MarginTradingWrapper extends BaseWrapper {
   constructor(credentials, serviceConfig) {
     super(credentials, serviceConfig)
   }
 
-  placeHfOrder(params) {
+  /*
+    Orders
+  */
+
+  addOrder(params) {
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/order',
       method: 'POST',
@@ -23,7 +22,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  placeHfOrderTest(params) {
+  addOrderTest(params) {
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/order/test',
       method: 'POST',
@@ -33,9 +32,9 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  cancelHfOrderByOrderId(params) {
+  cancelOrderByOrderId(params) {
     return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders/{orderId}?symbol={symbol}',
+      endpoint: '/api/v3/hf/margin/orders/{orderId}',
       method: 'DELETE',
       requiresAuth: true,
       baseUrl: 'spot',
@@ -43,9 +42,9 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  cancelHfOrderByClientOid(params) {
+  cancelOrderByClientOid(params) {
     return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}?symbol={symbol}',
+      endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}',
       method: 'DELETE',
       requiresAuth: true,
       baseUrl: 'spot',
@@ -53,9 +52,9 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  cancelAllHfOrdersBySymbol(params) {
+  cancelAllOrdersBySymbol(params) {
     return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders?symbol={symbol}&tradeType={tradeType}',
+      endpoint: '/api/v3/hf/margin/orders',
       method: 'DELETE',
       requiresAuth: true,
       baseUrl: 'spot',
@@ -63,9 +62,9 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  getActiveHfOrdersList(params) {
+  getSymbolsWithOpenOrder(params) {
     return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders/active?tradeType={tradeType}&symbol={symbol}',
+      endpoint: '/api/v3/hf/margin/order/active/symbols',
       method: 'GET',
       requiresAuth: true,
       baseUrl: 'spot',
@@ -73,7 +72,17 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  getFilledHfOrdersList(params) {
+  getOpenOrders(params) {
+    return this.makeRequest({
+      endpoint: '/api/v3/hf/margin/orders/active',
+      method: 'GET',
+      requiresAuth: true,
+      baseUrl: 'spot',
+      params,
+    })
+  }
+
+  getClosedOrders(params) {
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/orders/done',
       method: 'GET',
@@ -83,27 +92,7 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  getHfOrderDetailsByOrderId(params) {
-    return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders/{orderId}?symbol={symbol}',
-      method: 'GET',
-      requiresAuth: true,
-      baseUrl: 'spot',
-      params,
-    })
-  }
-
-  getHfOrderDetailsByClientOid(params) {
-    return this.makeRequest({
-      endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}?symbol={symbol}',
-      method: 'GET',
-      requiresAuth: true,
-      baseUrl: 'spot',
-      params,
-    })
-  }
-
-  getHfTransactionRecords(params) {
+  getTradeHistory(params) {
     return this.makeRequest({
       endpoint: '/api/v3/hf/margin/fills',
       method: 'GET',
@@ -113,20 +102,20 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
     })
   }
 
-  placeMarginOrder(params) {
+  getOrderByOrderId(params) {
     return this.makeRequest({
-      endpoint: '/api/v1/margin/order',
-      method: 'POST',
+      endpoint: '/api/v3/hf/margin/orders/{orderId}',
+      method: 'GET',
       requiresAuth: true,
       baseUrl: 'spot',
       params,
     })
   }
 
-  placeMarginOrderTest(params) {
+  getOrderByClientOid(params) {
     return this.makeRequest({
-      endpoint: '/api/v1/margin/order/test',
-      method: 'POST',
+      endpoint: '/api/v3/hf/margin/orders/client-order/{clientOid}',
+      method: 'GET',
       requiresAuth: true,
       baseUrl: 'spot',
       params,
@@ -311,4 +300,22 @@ export class MarginTradingWrapper extends composeMixins(marketDataMixin, fillsMi
       params,
     })
   }
+
+  /*
+    Debit
+  */
+
+  // TODO: Debit methods
+
+  /*
+  Credit
+  */
+
+  // TODO: Credit methods
+
+  /*
+  Risk Limit
+  */
+
+  // TODO: Risk Limit methods
 }
