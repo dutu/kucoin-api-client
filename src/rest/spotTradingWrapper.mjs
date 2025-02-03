@@ -183,7 +183,7 @@ export class SpotTradingWrapper extends BaseWrapper {
     },
   }
 
-  orders = {
+  order = {
     addOrder: (params) => {
       return this.makeRequest({
         endpoint: '/api/v1/hf/orders',
