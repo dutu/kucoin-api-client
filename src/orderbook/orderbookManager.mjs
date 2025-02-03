@@ -134,7 +134,7 @@ export class OrderbookManager extends EventEmitter {
     this.emit('orderbook', undefined)
     while (this.#isActive) {
       try {
-        const result = await this.#trading.getFullOrderBook({ symbol: this.#symbol })
+        const result = await this.#trading.market.getFullOrderBook({ symbol: this.#symbol })
         this.#orderbook = result.data
         // Check if we hava overlap between orderbook snapshot and cached updates
         if (this.#cacheSortedBySequence[0] && Number(this.#cacheSortedBySequence[0][Fields.seq]) < Number(this.#orderbook.sequence)) {
