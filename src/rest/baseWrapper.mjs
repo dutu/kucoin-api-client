@@ -96,7 +96,7 @@ export class BaseWrapper {
       }
     } catch (error) {
       let errorMessage = error.response ? `${error.response.status}: ${error.response.statusText}` : error.message
-      if (error.response.data?.code) {
+      if (error.response?.data?.code) {
         errorMessage += `. ${error.response.data?.code}: ${error.response.data?.msg}`
       }
 
