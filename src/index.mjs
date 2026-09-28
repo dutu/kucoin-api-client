@@ -5,6 +5,7 @@ import { FuturesTradingWrapper } from './rest/futuresTradingWrapper.mjs'
 import { createWebSocketClient } from './webSocket/webSocketClient.mjs'
 import { createOrderbookSubscriptionManager } from './orderbook/subscriptionManager.mjs'
 import { noop } from './utils/noop.mjs'
+import { createSocksAgent } from './utils/socksAgent.mjs'
 
 /**
  * Kucoin API client, providing access to various trading operations.
@@ -43,7 +44,11 @@ export class Kucoin {
    * @param {Object} [serviceConfig={}] - Configuration for additional service features.
    * @param {Function} [serviceConfig.onApiCallRateInfo] - Callback for API call rate info.
    * @param {Logger} [serviceConfig.logger={}] - Logger configuration with methods for different syslog levels.
+   * @param {string} [serviceConfig.socksProxyUri] - SOCKS proxy (e.g. 'socks5h://127.0.0.1:9050'), used for
+   *   all REST requests and WebSocket connections. When specified, the proxy is the only network path used:
+   *   an invalid URI throws immediately, and an unreachable proxy results in failed requests (no direct connection).
    * @throws {Error} If some but not all API credentials are provided.
+   * @throws {Error} If `serviceConfig.socksProxyUri` is malformed or uses an unsupported protocol.
    *
    * @example
    * const kucoinClient = new Kucoin({
@@ -90,10 +95,15 @@ export class Kucoin {
 
     const onApiCallRateInfoToUse = serviceConfig.onApiCallRateInfo || noop
 
+    // Resolve the proxy agent before creating any wrapper, so that an invalid proxy URI prevents
+    // the client (REST and WebSocket) from being created at all.
+    const agent = createSocksAgent(serviceConfig.socksProxyUri)
+
     const serviceConfigToUse = {
       ...serviceConfig,
       logger: loggerToUse,
       onApiCallRateInfo: onApiCallRateInfoToUse,
+      agent,
     }
 
     // Instantiate wrapper classes with either the complete credentials or undefined

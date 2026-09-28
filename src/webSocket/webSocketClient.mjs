@@ -7,9 +7,15 @@ import { subscribe } from './subscribe.mjs'
 import { uniqueId } from '../utils/uniqueId.mjs'
 import { SpotTradingWrapper } from '../rest/spotTradingWrapper.mjs'
 import { FuturesTradingWrapper } from '../rest/futuresTradingWrapper.mjs'
+import { createSocksAgent } from '../utils/socksAgent.mjs'
 
 export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
   const log = serviceConfig.logger
+  // The proxy is the only network path for the WebSocket connection: an unreachable proxy
+  // results in failed connection attempts, without falling back to a direct connection.
+  // The URI is validated even when an agent was provided, so that an invalid value always throws.
+  const configuredAgent = createSocksAgent(serviceConfig.socksProxyUri)
+  const agent = serviceConfig.agent ?? configuredAgent
   const spot = new SpotTradingWrapper(credentialsToUse, serviceConfig)
   const futures = new FuturesTradingWrapper(credentialsToUse, serviceConfig)
   const getConnectTokenFunctions = {
@@ -56,7 +62,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
         timeout: wsInfo.timeout,
     })
     const wsUrl = `${instanceServer.endpoint}?token=${connectInfo.data.token}&connectId=${wsInfo.connectId}`
-    return new WebSocket(wsUrl)
+    return agent ? new WebSocket(wsUrl, { agent }) : new WebSocket(wsUrl)
   }
 
   webSocket = new ForeverWebSocket(

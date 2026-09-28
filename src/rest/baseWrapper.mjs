@@ -1,22 +1,27 @@
 import crypto from 'crypto'
 import axios from 'axios'
 import { toQueryString } from '../utils/toQueryString.mjs'
+import { createSocksAgent } from '../utils/socksAgent.mjs'
 
 export class BaseWrapper {
   #credentials
   #onApiCallRateInfo
   #log
   #client
+  #agent
   #baseURLs = {
     spot: `https://api.kucoin.com`,
     futures: 'https://api-futures.kucoin.com',
     broker: 'https://api-broker.kucoin.com',
   }
 
-  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { onApiCallRateInfo, logger }) {
+  constructor({ apiKey, apiSecret, apiPassphrase, apiKeyVersion } = {}, { onApiCallRateInfo, logger, agent, socksProxyUri }) {
     this.#credentials = { apiKey, apiSecret, apiPassphrase, apiKeyVersion }
     this.#onApiCallRateInfo = onApiCallRateInfo
     this.#log = logger
+    // Validate the proxy URI even when an agent was provided, so that an invalid value always throws.
+    const configuredAgent = createSocksAgent(socksProxyUri)
+    this.#agent = agent ?? configuredAgent
     this.#client = axios.create()
   }
 
@@ -62,6 +67,14 @@ export class BaseWrapper {
       url: `${this.#baseURLs[baseUrl]}${baseEndpoint}`,
       headers: {},
       timeout: 5000,
+    }
+
+    if (this.#agent) {
+      // Route the request through the SOCKS proxy. Setting `proxy` to false disables axios'
+      // environment based proxy handling, so the request can not bypass the configured proxy.
+      axiosConfig.httpAgent = this.#agent
+      axiosConfig.httpsAgent = this.#agent
+      axiosConfig.proxy = false
     }
 
     // Include params as 'params' for GET and DELETE, 'data' for others
