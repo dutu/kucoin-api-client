@@ -1,6 +1,6 @@
 {
   "name": "kucoin-api-client",
-  "version": "0.3.0-dev0",
+  "version": "0.3.0",
   "description": "KuCoin API client for REST and WebSocket API",
   "type": "module",
   "author": "dutu",
