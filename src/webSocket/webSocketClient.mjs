@@ -29,7 +29,7 @@ export function createWebSocketClient(credentialsToUse, serviceConfig, market) {
     },
   }
 
-  const getConnectToken = getConnectTokenFunctions[market][credentialsToUse.apiKey ? 'private' : 'public'].bind(spot)
+  const getConnectToken = getConnectTokenFunctions[market][credentialsToUse?.apiKey ? 'private' : 'public'].bind(spot)
 
   let webSocket
   let wsInfo = {
