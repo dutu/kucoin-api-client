@@ -17,9 +17,10 @@ const supportedProtocols = new Set(['socks:', 'socks4:', 'socks4a:', 'socks5:', 
  *
  * @param {string} [socksProxyUri] - The SOCKS proxy URI (e.g. 'socks5h://127.0.0.1:9050').
  *   Supported protocols are socks, socks4, socks4a, socks5 and socks5h; surrounding whitespace is
- *   ignored. When `undefined`, no proxy is used.
+ *   ignored. An explicit port from 1 to 65535 is required. When `undefined`, no proxy is used.
  * @returns {import('socks-proxy-agent').SocksProxyAgent|undefined} The proxy agent, or `undefined` when no URI was provided.
- * @throws {Error} If the value is not a string, is empty, is malformed, uses an unsupported protocol or has no host.
+ * @throws {Error} If the value is not a string, is empty, is malformed, uses an unsupported protocol,
+ *   or has no host or valid port.
  */
 export function createSocksAgent(socksProxyUri) {
   if (socksProxyUri === undefined) {
@@ -49,6 +50,10 @@ export function createSocksAgent(socksProxyUri) {
 
   if (!proxyUrl.hostname) {
     throw new Error('Invalid serviceConfig.socksProxyUri: missing proxy host')
+  }
+
+  if (!proxyUrl.port || proxyUrl.port === '0') {
+    throw new Error('Invalid serviceConfig.socksProxyUri: a proxy port from 1 to 65535 is required')
   }
 
   try {

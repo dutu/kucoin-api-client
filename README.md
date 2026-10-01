@@ -29,9 +29,9 @@ const ticker = await kucoin.spot.market.getTicker({ symbol: 'BTC-USDT' })
 WebSocket connection (public and private spot/futures clients, and the orderbook subscriptions).
 The proxy is Node.js only; browsers using `isomorphic-ws` ignore the agent.
 
-Supported protocols are `socks://`, `socks4://`, `socks4a://`, `socks5://` and `socks5h://`; the port
-defaults to `1080` when omitted. The `socks5h://` and `socks://` protocols resolve the target host
-name at the proxy, while `socks5://` resolves it locally.
+Supported protocols are `socks://`, `socks4://`, `socks4a://`, `socks5://` and `socks5h://`. The proxy
+URI must include a port from `1` to `65535`, such as `:1080`. The `socks5h://` and `socks://`
+protocols resolve the target host name at the proxy, while `socks5://` resolves it locally.
 
 ```js
 const kucoin = new Kucoin(credentials, {
@@ -43,8 +43,8 @@ The proxy is the only network path used:
 
 - Only omitting `socksProxyUri` (or passing `undefined`) connects directly. Any other value must be
   a non-empty SOCKS proxy URI string (surrounding whitespace is ignored); an empty value, a
-  non-string value, a malformed URI, an unsupported protocol or a missing proxy host throws when
-  constructing the client, so it can not be created with an invalid proxy.
+  non-string value, a malformed URI, an unsupported protocol, a missing proxy host or a missing or
+  invalid port throws when constructing the client, so it can not be created with an invalid proxy.
 - An unreachable or non-responsive proxy results in failed requests and failed WebSocket connection
   attempts; there is no fallback to a direct connection.
 - Environment based proxies (`HTTPS_PROXY`, `ALL_PROXY`, ...) are ignored for requests made by this

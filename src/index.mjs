@@ -45,10 +45,11 @@ export class Kucoin {
    * @param {Function} [serviceConfig.onApiCallRateInfo] - Callback for API call rate info.
    * @param {Logger} [serviceConfig.logger={}] - Logger configuration with methods for different syslog levels.
    * @param {string} [serviceConfig.socksProxyUri] - SOCKS proxy (e.g. 'socks5h://127.0.0.1:9050'), used for
-   *   all REST requests and WebSocket connections. When specified, the proxy is the only network path used:
+   *   all REST requests and WebSocket connections. The proxy URI must include a port from 1 to 65535.
+   *   When specified, the proxy is the only network path used:
    *   an invalid URI throws immediately, and an unreachable proxy results in failed requests (no direct connection).
    * @throws {Error} If some but not all API credentials are provided.
-   * @throws {Error} If `serviceConfig.socksProxyUri` is malformed or uses an unsupported protocol.
+   * @throws {Error} If `serviceConfig.socksProxyUri` is malformed, lacks a valid port or uses an unsupported protocol.
    *
    * @example
    * const kucoinClient = new Kucoin({

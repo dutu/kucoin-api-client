@@ -251,6 +251,10 @@ test('socksProxyUri validation fails closed', () => {
     ['an unsupported protocol', 'http://127.0.0.1:1080'],
     ['a missing host', 'socks5://'],
     ['missing proxy host', 'socks5://user:password@'],
+    ['a missing port', 'socks5://127.0.0.1'],
+    ['a missing authenticated proxy port', 'socks5h://user:password@127.0.0.1'],
+    ['an empty port', 'socks5://127.0.0.1:'],
+    ['port zero', 'socks5://127.0.0.1:0'],
   ]
 
   for (const [label, socksProxyUri] of invalidValues) {
@@ -265,7 +269,10 @@ test('socksProxyUri validation fails closed', () => {
   assert.doesNotThrow(() => new Kucoin({}, { socksProxyUri: undefined }))
 
   assert.ok(createSocksAgent('socks5h://127.0.0.1:9050'))
-  assert.ok(createSocksAgent('  socks5://user:password@127.0.0.1  '))
+  assert.ok(createSocksAgent('socks://127.0.0.1:1'))
+  assert.ok(createSocksAgent('socks4://127.0.0.1:65535'))
+  assert.ok(createSocksAgent('  socks5://user:password@127.0.0.1:1080  '))
+  assert.throws(() => createSocksAgent('socks5://127.0.0.1'), /serviceConfig\.socksProxyUri:.*port/)
 })
 
 test('socksProxyUri errors never expose the configured value', () => {
@@ -276,6 +283,7 @@ test('socksProxyUri errors never expose the configured value', () => {
     // A '/' in the password previously defeated the credential masking.
     ['socks5://user:S3/cr3t@127.0.0.1:1080', 'S3/cr3t'],
     [`socks5://user:${password}@`, password],
+    [`socks5://user:${password}@127.0.0.1`, password],
     [`http://user:${password}@127.0.0.1:1080`, password],
     [`socks5://user:${password}@[::1`, password],
     [`socks5://user:${password}@127.0.0.1:notaport`, password],
